@@ -5,7 +5,6 @@ const { CronJob } = require('cron'); // Import the node-cron package
 const bitcoinerjobsScraper = require('./scraper/bitcoinerjobsScraper');
 const scrapeCryptoJobsList = require('./scraper/cryptoJobsListScraper');
 
-
 const app = express();
 
 const websites = [
@@ -31,11 +30,11 @@ async function scrapeJobData(website) {
 
         let websiteJobs = [];
 
-        if (website.name === 'Bitcoinerjobs') {
+     
             websiteJobs = await bitcoinerjobsScraper(page);
-        } else if (website.name === 'CryptoJobsList') {
+     
             websiteJobs = await scrapeCryptoJobsList(page, website.base);
-        }
+        
         
         // You can continue adding more conditions for other websites
 
@@ -48,18 +47,19 @@ async function scrapeJobData(website) {
 }
 
 async function scrapeAllJobs() {
-    for (const website of websites) {
-        await scrapeJobData(website);
-    }
+    websites.forEach(async website => {
+         await scrapeJobData(website);
+    }); 
+       
 }
 // scrapeAllJobs();
 
  // Define the cron schedule
 
-console.log("schledule started");
+  scrapeAllJobs();
 const fetchJobData = new CronJob('* * * * *', async () => {
     console.log('Running every minute job data scrape...');
-    await scrapeAllJobs.run();
+    await scrapeAllJobs();
     console.log('Every minute job data scrape completed.');
 });
 fetchJobData.start();
