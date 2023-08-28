@@ -7,6 +7,7 @@ const scrapePompcryptojobs = require("./scraper/pomcryptojobs");
 const scrapeHirevibes = require("./scraper/hirevibes");
 const scrapeNiftyjobs = require("./scraper/niftyjobs");
 const scrapeCryptovalley = require("./scraper/cryptovalley");
+const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
 
 require("dotenv").config();
 
@@ -45,6 +46,11 @@ const websites = [
     address: "https://cryptovalley.jobs/",
     base: "https://cryptovalley.jobs/",
   },
+  {
+    name: "Cryptocurrencyjobs",
+    address: "https://cryptocurrencyjobs.co/?query=bitcoin",
+    base: "https://cryptocurrencyjobs.co",
+  },
 ];
 
 const jobData = {}; // Store job listings by category
@@ -59,23 +65,26 @@ async function scrapeJobData(website) {
 
     // if (website.name === "Bitcoinerjobs") {
     //   websiteJobs = await bitcoinerjobsScraper(page);
-    //   //  console.log('Bitcoinerjobs jobs:', websiteJobs);
+    //   console.log("Bitcoinerjobs jobs:", websiteJobs);
     // } else if (website.name === "CryptoJobsList") {
     //   websiteJobs = await scrapeCryptoJobsList(page, website.base);
-    //   //  console.log('CryptoJobsList jobs:', websiteJobs);
+    //   console.log("CryptoJobsList jobs:", websiteJobs);
     // } else if (website.name === "Pompcryptojobs") {
     //   websiteJobs = await scrapePompcryptojobs(page);
-    //   // console.log('Pompcryptojobs jobs:', websiteJobs);
+    //   console.log("Pompcryptojobs jobs:", websiteJobs);
     // } else if (website.name === "Hirevibes") {
     //   websiteJobs = await scrapeHirevibes(page, website.base);
-    //   // console.log('Hirevibes jobs:', websiteJobs);
+    //   console.log("Hirevibes jobs:", websiteJobs);
     // } else if (website.name === "Niftyjobs") {
     //   websiteJobs = await scrapeNiftyjobs(page);
-    //   // console.log("Niftyjobs jobs:", websiteJobs);
+    //   console.log("Niftyjobs jobs:", websiteJobs);
+    // } else if (website.name === "Cryptovalley") {
+    //   websiteJobs = await scrapeCryptovalley(page, website.base);
+    //   console.log("Cryptovalley jobs:", websiteJobs);
     // } else
-    if (website.name === "Cryptovalley") {
-      websiteJobs = await scrapeCryptovalley(page, website.base);
-      console.log("Cryptovalley jobs:", websiteJobs);
+    if (website.name === "Cryptocurrencyjobs") {
+      websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
+      console.log("Cryptocurrencyjobs jobs:", websiteJobs);
     }
 
     jobData[website.name] = websiteJobs;
