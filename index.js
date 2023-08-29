@@ -1,5 +1,6 @@
-const puppeteer = require("puppeteer");
-const { CronJob } = require("cron"); // Import the node-cron package
+const puppeteer = require("puppeteer-extra");
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const { CronJob } = require("cron");
 const { createClient } = require("@supabase/supabase-js");
 const bitcoinerjobsScraper = require("./scraper/bitcoinerjobsScraper");
 const scrapeCryptoJobsList = require("./scraper/cryptoJobsListScraper");
@@ -10,6 +11,7 @@ const scrapeCryptovalley = require("./scraper/cryptovalley");
 const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
 
 require("dotenv").config();
+puppeteer.use(StealthPlugin());
 
 const supabaseUrl = "https://hnfpcsanqackenyhtoep.supabase.co";
 const supabaseKey = process.env.PUPLIC_SUPABASE_KEY;
@@ -63,26 +65,25 @@ async function scrapeJobData(website) {
 
     let websiteJobs = [];
 
-    // if (website.name === "Bitcoinerjobs") {
-    //   websiteJobs = await bitcoinerjobsScraper(page);
-    //   console.log("Bitcoinerjobs jobs:", websiteJobs);
-    // } else if (website.name === "CryptoJobsList") {
-    //   websiteJobs = await scrapeCryptoJobsList(page, website.base);
-    //   console.log("CryptoJobsList jobs:", websiteJobs);
-    // } else if (website.name === "Pompcryptojobs") {
-    //   websiteJobs = await scrapePompcryptojobs(page);
-    //   console.log("Pompcryptojobs jobs:", websiteJobs);
-    // } else if (website.name === "Hirevibes") {
-    //   websiteJobs = await scrapeHirevibes(page, website.base);
-    //   console.log("Hirevibes jobs:", websiteJobs);
-    // } else if (website.name === "Niftyjobs") {
-    //   websiteJobs = await scrapeNiftyjobs(page);
-    //   console.log("Niftyjobs jobs:", websiteJobs);
-    // } else if (website.name === "Cryptovalley") {
-    //   websiteJobs = await scrapeCryptovalley(page, website.base);
-    //   console.log("Cryptovalley jobs:", websiteJobs);
-    // } else
-    if (website.name === "Cryptocurrencyjobs") {
+    if (website.name === "Bitcoinerjobs") {
+      websiteJobs = await bitcoinerjobsScraper(page);
+      console.log("Bitcoinerjobs jobs:", websiteJobs);
+    } else if (website.name === "CryptoJobsList") {
+      websiteJobs = await scrapeCryptoJobsList(page, website.base);
+      console.log("CryptoJobsList jobs:", websiteJobs);
+    } else if (website.name === "Pompcryptojobs") {
+      websiteJobs = await scrapePompcryptojobs(page);
+      console.log("Pompcryptojobs jobs:", websiteJobs);
+    } else if (website.name === "Hirevibes") {
+      websiteJobs = await scrapeHirevibes(page, website.base);
+      console.log("Hirevibes jobs:", websiteJobs);
+    } else if (website.name === "Niftyjobs") {
+      websiteJobs = await scrapeNiftyjobs(page);
+      console.log("Niftyjobs jobs:", websiteJobs);
+    } else if (website.name === "Cryptovalley") {
+      websiteJobs = await scrapeCryptovalley(page, website.base);
+      console.log("Cryptovalley jobs:", websiteJobs);
+    } else if (website.name === "Cryptocurrencyjobs") {
       websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
       console.log("Cryptocurrencyjobs jobs:", websiteJobs);
     }
