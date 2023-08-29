@@ -1,7 +1,9 @@
-async function scrapeBitcoinerjobs(page) {
+async function scrapeCryptovalley(page, baseUrl) {
   await page.waitForSelector("ul");
-  const websiteJobs = await page.evaluate(async () => {
+
+  const websiteJobs = await page.evaluate(async (baseUrl) => {
     const jobs = [];
+
     const jobElements = document.querySelectorAll("ul.jobs li");
 
     for (const jobElement of jobElements) {
@@ -22,9 +24,9 @@ async function scrapeBitcoinerjobs(page) {
     }
 
     return jobs;
-  });
+  }, baseUrl);
 
   return websiteJobs;
 }
 
-module.exports = scrapeBitcoinerjobs;
+module.exports = scrapeCryptovalley;
