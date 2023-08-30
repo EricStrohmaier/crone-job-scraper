@@ -57,7 +57,7 @@ const websites = [
   },
 ];
 
-const jobData = {}; // Store job listings by category
+const jobData = {};
 
 // Define a route to access the scraped job data
 app.get("/", (req, res) => {
@@ -76,6 +76,7 @@ async function scrapeJobData(website) {
         "--disable-dev-shm-usage",
       ],
     });
+
     const page = await browser.newPage();
     await page.goto(website.address);
 
@@ -133,19 +134,22 @@ async function scraperjobs() {
   }
 }
 
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
+});
+
 //    ('0 */8 * * * ')    //every 8 hours
-console.log("Scraperjobs starting...");
+console.log(
+  "Scraperjobs starting... Right now the cron job is set to run every 4 hours."
+);
+
 const fetchJobData = new CronJob("0 */4 * * *", async () => {
-  console.log("It is time for the job data scraper...");
+  console.log("It is time for scraping...");
   await scraperjobs();
-  console.log("The job data scraper has completed.");
+  console.log("The data scraping has completed.");
 });
 fetchJobData.start();
 
 // scraperjobs(); // Call the function to initiate scraping
-
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
 
 module.exports = app;
