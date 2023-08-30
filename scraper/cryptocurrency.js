@@ -1,8 +1,6 @@
 async function scrapeCryptocurrencyjobs(page, baseUrl) {
   await page.waitForSelector("li.ais-Hits-item", { timeout: 60000 }); // Increase timeout to 60
 
-  await page.screenshot({ path: "cryptoshotload.png" });
-
   const websiteJobs = await page.evaluate(async (baseUrl) => {
     const jobs = [];
 
@@ -31,7 +29,6 @@ async function scrapeCryptocurrencyjobs(page, baseUrl) {
 
     return jobs;
   }, baseUrl);
-  await page.screenshot({ path: "cryptoshot.png" });
 
   return websiteJobs;
 }
