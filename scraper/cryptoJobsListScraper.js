@@ -8,29 +8,24 @@ async function scrapeCryptoJobsList(page, baseUrl) {
     );
 
     for (const jobElement of jobElements) {
-      const titleElement = jobElement.querySelector(
-        "span.JobPreviewInline_jobTitle__WYzmvno-underline"
-      );
-      const companyElement = jobElement.querySelector(
-        "a.JobPreviewInline_companyName__5ffOt"
-      );
-      const locationElement = jobElement.querySelector(
-        "span.JobPreviewInline_jobLocation__dV9Hp"
-      );
+      const title = jobElement
+        .querySelector("span.JobPreviewInline_jobTitle__WYzmvno-underline")
+        .textContent.trim();
+      const company = jobElement
+        .querySelector("a.JobPreviewInline_companyName__5ffOt")
+        .textContent.trim();
+      const location = jobElement
+        .querySelector("span.JobPreviewInline_jobLocation__dV9Hp")
+        .textContent.trim();
 
-      if (titleElement && companyElement && locationElement) {
-        const title = titleElement.textContent.trim();
-        const company = companyElement.textContent.trim();
-        const location = locationElement.textContent.trim();
-        const url = jobElement.querySelector("a").getAttribute("href");
+      const url = jobElement.querySelector("a").getAttribute("href");
 
-        jobs.push({
-          title,
-          url: baseUrl + url,
-          company,
-          location,
-        });
-      }
+      jobs.push({
+        title,
+        url: baseUrl + url,
+        company,
+        location,
+      });
     }
 
     return jobs;

@@ -27,7 +27,7 @@ const websites = [
   },
   {
     name: "CryptoJobsList",
-    address: "https://cryptojobslist.com/bitcoin",
+    address: "https://cryptojobslist.com/search?q=bitcoin",
     base: "https://cryptojobslist.com",
   },
   {
@@ -67,12 +67,10 @@ app.get("/", (req, res) => {
 async function scrapeJobData(website) {
   try {
     const browser = await puppeteer.launch({
+      // headless: false, // Run in headless mode
       args: [
-        // Required for Docker version of Puppeteer
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        // This will write shared memory files into /tmp instead of /dev/shm,
-        // because Docker’s default for /dev/shm is 64MB
         "--disable-dev-shm-usage",
       ],
     });
@@ -84,18 +82,26 @@ async function scrapeJobData(website) {
 
     if (website.name === "Bitcoinerjobs") {
       websiteJobs = await bitcoinerjobsScraper(page);
+      console.log("Bitcoinerjobs jobs:", websiteJobs.length);
     } else if (website.name === "CryptoJobsList") {
       websiteJobs = await scrapeCryptoJobsList(page, website.base);
+      console.log("CryptoJobsList jobs:", websiteJobs);
+      // console.log("CryptoJobsList jobs:", websiteJobs.length);
     } else if (website.name === "Pompcryptojobs") {
       websiteJobs = await scrapePompcryptojobs(page);
+      console.log("Pompcryptojobs jobs:", websiteJobs.length);
     } else if (website.name === "Hirevibes") {
       websiteJobs = await scrapeHirevibes(page, website.base);
+      console.log("Hirevibes jobs:", websiteJobs.length);
     } else if (website.name === "Niftyjobs") {
       websiteJobs = await scrapeNiftyjobs(page);
+      console.log("Niftyjobs jobs:", websiteJobs.length);
     } else if (website.name === "Cryptovalley") {
       websiteJobs = await scrapeCryptovalley(page, website.base);
+      console.log("Cryptovalley jobs:", websiteJobs.length);
     } else if (website.name === "Cryptocurrencyjobs") {
       websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
+      console.log("Cryptocurrencyjobs jobs:", websiteJobs.length);
     }
 
     jobData[website.name] = websiteJobs;
@@ -140,16 +146,16 @@ app.listen(port, () => {
 
 //    ('0 */8 * * * ')    //every 8 hours
 console.log(
-  "Scraperjobs starting... Right now the cron job is set to run every 4 hours."
+  "Scraperjobs starting... Right now the cron job is set to run every 2 hours."
 );
 
-const fetchJobData = new CronJob("0 */4 * * *", async () => {
+const fetchJobData = new CronJob("0 */2 * * *", async () => {
   console.log("It is time for scraping...");
   await scraperjobs();
   console.log("The data scraping has completed.");
 });
 fetchJobData.start();
 
-// scraperjobs(); // Call the function to initiate scraping
+scraperjobs(); // Call the function to initiate scraping
 
 module.exports = app;
