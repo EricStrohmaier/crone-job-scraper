@@ -1,36 +1,48 @@
-async function scrapeHirevibes(page) {
-  const jobLinks = await page.evaluate(() => {
+async function scrapeHirevibes(page, baseUrl) {
+  console.log("Scraping job  Hirevibes links...");
+  const jobLinks = await page.evaluate(async (baseUrl) => {
     const links = [];
-    const jobElements = document.querySelectorAll("div.column");
+    const jobElements = document.querySelectorAll("div.card.job");
 
     for (const jobElement of jobElements) {
       const relativeUrl = jobElement
-        .querySelector("div a")
+        .querySelector("div.media-left a")
         .getAttribute("href");
-      const fullUrl = new URL(relativeUrl, window.location.href).href;
-      links.push(fullUrl);
+
+      if (relativeUrl) {
+        const fullUrl = new URL(relativeUrl, window.location.href).href;
+        links.push(fullUrl);
+      }
     }
     return links;
   });
 
   const websiteJobs = [];
-  for (const jobLink of jobLinks) {
-    await page.goto(jobLink);
-    const jobDetails = await page.evaluate(() => {
-      const title = document.querySelector("p.title.is-4").textContent.trim();
-      const type = document
-        .querySelector("p.break-text.m-b-8")
-        .textContent.trim();
-      const company = document
-        .querySelector("strong.content-title")
-        .textContent.trim();
-      const location = document
-        .querySelector("span.content-subtitle")
-        .textContent.trim();
-      const description = document
-        .querySelector("div.toastui-editor-contents")
-        .textContent.trim()
-        .replace(/\s+/g, " ");
+
+  for (const link of jobLinks) {
+    console.log(`Navigating to ${link}...`);
+    await page.goto(link);
+
+    const jobInfo = await page.evaluate(async () => {
+      await page.waitForSelector("p.title.is-4");
+
+      const titleElement = document.querySelector("p.title.is-4");
+      const typeElement = document.querySelector("p.break-text");
+      const companyElement = document.querySelector("strong.content-title");
+      const locationElement = document.querySelector("span.content-subtitle");
+      const descriptionElement = document.querySelector(
+        "div.toastui-editor-contents"
+      );
+
+      const title = titleElement ? titleElement.textContent.trim() : "";
+      const type = typeElement ? typeElement.textContent.trim() : "";
+      const company = companyElement ? companyElement.textContent.trim() : "";
+      const location = locationElement
+        ? locationElement.textContent.trim()
+        : "";
+      const description = descriptionElement
+        ? descriptionElement.textContent.trim().replace(/\s+/g, " ")
+        : "";
 
       return {
         title,
@@ -40,8 +52,12 @@ async function scrapeHirevibes(page) {
         description,
       };
     });
-    websiteJobs.push(jobDetails);
+    websiteJobs.push(jobInfo);
+
+    console.log(`Scraped job data from ${link}.`);
   }
+
+  console.log("Scraping completed.");
 
   return websiteJobs;
 }
