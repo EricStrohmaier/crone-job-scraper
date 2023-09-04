@@ -1,5 +1,5 @@
 const express = require("express");
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-extra");
 const { CronJob } = require("cron");
 const { createClient } = require("@supabase/supabase-js");
 const bitcoinerjobsScraper = require("./scraper/bitcoinerjobsScraper");
@@ -9,6 +9,9 @@ const scrapeHirevibes = require("./scraper/hirevibes");
 const scrapeNiftyjobs = require("./scraper/niftyjobs");
 const scrapeCryptovalley = require("./scraper/cryptovalley");
 const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
+
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+puppeteer.use(StealthPlugin());
 
 require("dotenv").config();
 
@@ -22,12 +25,12 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const websites = [
   {
     name: "Bitcoinerjobs",
-    address: "https://bitcoinerjobs.com/",
+    address: "https://bitcoinerjobs.com",
     base: "",
   },
   {
     name: "CryptoJobsList",
-    address: "https://cryptojobslist.com/search?q=bitcoin",
+    address: "https://cryptojobslist.com/",
     base: "https://cryptojobslist.com",
   },
   {
@@ -67,7 +70,7 @@ app.get("/", (req, res) => {
 async function scrapeJobData(website) {
   try {
     const browser = await puppeteer.launch({
-      // headless: false, // Run in headless mode
+      headless: "new", // Run in headless mode
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -81,8 +84,9 @@ async function scrapeJobData(website) {
     let websiteJobs = [];
 
     if (website.name === "Bitcoinerjobs") {
-      websiteJobs = await bitcoinerjobsScraper(page);
+      websiteJobs = await bitcoinerjobsScraper(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
+      // console.log("Bitcoinerjobs jobs:", websiteJobs);
     } else if (website.name === "CryptoJobsList") {
       websiteJobs = await scrapeCryptoJobsList(page, website.base);
       console.log("CryptoJobsList jobs:", websiteJobs);
@@ -90,9 +94,11 @@ async function scrapeJobData(website) {
     } else if (website.name === "Pompcryptojobs") {
       websiteJobs = await scrapePompcryptojobs(page);
       console.log("Pompcryptojobs jobs:", websiteJobs.length);
+      // console.log("Pompcryptojobs jobs:", websiteJobs);
     } else if (website.name === "Hirevibes") {
       websiteJobs = await scrapeHirevibes(page, website.base);
       console.log("Hirevibes jobs:", websiteJobs.length);
+      console.log("Hirevibes jobs:", websiteJobs);
     } else if (website.name === "Niftyjobs") {
       websiteJobs = await scrapeNiftyjobs(page);
       console.log("Niftyjobs jobs:", websiteJobs.length);
@@ -116,6 +122,19 @@ async function scrapeJobData(website) {
         .single();
 
       if (!existingData) {
+        //   const getDescription = async ()  => {
+        //     try {
+        //         const data = await fetch("", {
+        //             method: "POST",
+        //             body: JSON.stringify({ description }),
+        //         });
+        //         const { error, description } = await data.json();
+
+        //     } catch (error) {
+        //         console.error("An error occurred while parsing:", error);
+        //     }
+        // };
+
         // Insert the job only if it doesn't exist
         const { data, error } = await supabase.from(website.name).insert([
           {
@@ -123,6 +142,14 @@ async function scrapeJobData(website) {
             url: job.url,
             company: job.company,
             location: job.location,
+            description: job.description,
+            remote: job.remote,
+            type: job.type,
+            tags: job.tags,
+            salary: job.salary,
+            category: job.category,
+            postedAt: job.postedAt,
+            applyURL: job.constructApplyUrl,
           },
         ]);
       }

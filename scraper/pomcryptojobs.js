@@ -1,33 +1,52 @@
-
 async function scrapePompcryptojobs(page) {
-    const websiteJobs = await page.evaluate(async () => {
-        const jobs = [];
-        const jobElements = document.querySelectorAll('article');
+  const jobLinks = await page.evaluate(() => {
+    const links = [];
+    const jobElements = document.querySelectorAll("article");
 
-        jobElements.forEach((jobElement) => {
-            const titleElement = jobElement.querySelector('.listing-item__title a');
-            const companyElement = jobElement.querySelector('.listing-item__info--item-company');
-            const locationElement = jobElement.querySelector('.listing-item__info--item-location');
-            
-            if (titleElement && companyElement && locationElement) {
-                const title = titleElement.textContent.trim();
-                const company = companyElement.textContent.trim();
-                const url = titleElement.href;
-                const location = locationElement.textContent.trim();
+    for (const jobElement of jobElements) {
+      const relativeUrl = jobElement.querySelector("a").getAttribute("href");
+      const fullUrl = new URL(relativeUrl, window.location.href).href;
+      links.push(fullUrl);
+    }
+    return links;
+  });
 
-                jobs.push({
-                    title,
-                    company,
-                    url,
-                    location
-                });
-            }
-        });
+  const websiteJobs = [];
+  for (const jobLink of jobLinks) {
+    await page.goto(jobLink);
+    const jobDetails = await page.evaluate(() => {
+      const title = document
+        .querySelector("h1.details-header__title")
+        .textContent.trim();
+      const company = document
+        .querySelector(".listing-item__info--item-company")
+        .textContent.trim();
+      const location = document
+        .querySelector(".listing-item__info--item-location")
+        .textContent.trim();
+      const url = window.location.href;
+      const jobTypeElements = document.querySelectorAll(".job-type__value");
+      const type = Array.from(jobTypeElements).map((element) =>
+        element.textContent.trim()
+      );
+      const description = document
+        .querySelector(".details-body__content")
+        .textContent.trim()
+        .replace(/\s+/g, " ");
 
-        return jobs;
+      return {
+        title,
+        company,
+        url,
+        location,
+        type,
+        description,
+      };
     });
+    websiteJobs.push(jobDetails);
+  }
 
-    return websiteJobs;
+  return websiteJobs;
 }
 
 module.exports = scrapePompcryptojobs;

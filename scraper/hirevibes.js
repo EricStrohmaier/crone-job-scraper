@@ -1,34 +1,49 @@
-async function scrapeHirevibes(page, baseUrl) {
-    const websiteJobs = await page.evaluate(async (baseUrl) => {
-        const jobs = [];
-        const jobElements = document.querySelectorAll('div.column');
+async function scrapeHirevibes(page) {
+  const jobLinks = await page.evaluate(() => {
+    const links = [];
+    const jobElements = document.querySelectorAll("div.column");
 
-        for (const jobElement of jobElements) {
-            const titleElement = jobElement.querySelector('h2.job-title');
-            const companyElement = jobElement.querySelector('p.company a');
-            const locationElement = jobElement.querySelector('span.location');
+    for (const jobElement of jobElements) {
+      const relativeUrl = jobElement
+        .querySelector("div a")
+        .getAttribute("href");
+      const fullUrl = new URL(relativeUrl, window.location.href).href;
+      links.push(fullUrl);
+    }
+    return links;
+  });
 
-            if (titleElement && companyElement && locationElement) {
-                const title = titleElement.textContent.trim();
-                const company = companyElement.textContent.trim();
-                const location = locationElement.textContent.trim();
-                const url = companyElement.getAttribute('href');
+  const websiteJobs = [];
+  for (const jobLink of jobLinks) {
+    await page.goto(jobLink);
+    const jobDetails = await page.evaluate(() => {
+      const title = document.querySelector("p.title.is-4").textContent.trim();
+      const type = document
+        .querySelector("p.break-text.m-b-8")
+        .textContent.trim();
+      const company = document
+        .querySelector("strong.content-title")
+        .textContent.trim();
+      const location = document
+        .querySelector("span.content-subtitle")
+        .textContent.trim();
+      const description = document
+        .querySelector("div.toastui-editor-contents")
+        .textContent.trim()
+        .replace(/\s+/g, " ");
 
-                jobs.push({
-                    title,
-                    url: baseUrl + url,
-                    company,
-                    location
-                });
-            } else {
-                console.log('Missing job data for an element');
-            }
-        }
+      return {
+        title,
+        company,
+        type,
+        location,
+        description,
+      };
+    });
+    websiteJobs.push(jobDetails);
+  }
 
-        return jobs;
-    }, baseUrl);
-
-    return websiteJobs;
+  return websiteJobs;
 }
 
 module.exports = scrapeHirevibes;
