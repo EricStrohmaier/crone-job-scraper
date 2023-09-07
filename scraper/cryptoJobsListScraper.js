@@ -1,15 +1,30 @@
-async function scrapeCryptoJobsList(page, baseUrl) {
+async function scrapeCryptoJobsList(page) {
   // Get the list of job links
+  await page.waitForSelector("ul");
+
   const jobLinks = await page.evaluate(() => {
     const links = [];
-    const jobElements = document.querySelectorAll(
-      "li.JobPreviewInline_JobPreviewInline__uAIxU"
-    );
+    const jobElements = document.querySelectorAll("li.JobInline_job__W8MWi");
 
     for (const jobElement of jobElements) {
       const relativeUrl = jobElement.querySelector("a").getAttribute("href");
       const fullUrl = new URL(relativeUrl, window.location.href).href;
-      links.push(fullUrl);
+      const title = jobElement
+        .querySelector("span.JobInline_jobTitle__WWhIDno-underline")
+        .textContent.trim();
+      const company = jobElement
+        .querySelector("a.JobInline_companyName__89Bqd")
+        .textContent.trim();
+      const tags = Array.from(
+        jobElement.querySelectorAll("a.JobInline_jobLocation__RRLul")
+      ).map((tag) => tag.textContent.trim());
+
+      links.push({
+        url: fullUrl,
+        title,
+        company,
+        tags,
+      });
     }
 
     return links;
@@ -18,34 +33,34 @@ async function scrapeCryptoJobsList(page, baseUrl) {
   const websiteJobs = [];
 
   for (const jobLink of jobLinks) {
-    // Navigate to each job's page
-    await page.goto(jobLink);
+    try {
+      // Navigate to each job's page
+      await page.goto(jobLink.url);
 
-    // Wait for the relevant content to load
-    await page.waitForSelector(".job-box");
+      // Wait for the relevant content to load
+      await page.waitForSelector(".JobView_description__tW863");
 
-    // Extract job details on the job's page
-    const jobDetails = await page.evaluate(async (baseUrl) => {
-      const title = document
-        .querySelector("span.JobPreviewInline_jobTitle__WYzmv")
-        .textContent.trim();
-      const company = document
-        .querySelector("a.JobPreviewInline_companyName__5ffOt")
-        .textContent.trim();
-      const location = document
-        .querySelector("span.JobPreviewInline_jobLocation__dV9Hp")
-        .textContent.trim();
-      const url = window.location.href; // Use the current page's URL
+      // Extract job description on the job's page
+      let description = await page.evaluate(() => {
+        const descriptionElement = document.querySelector(
+          ".JobView_description__tW863"
+        );
+        return descriptionElement ? descriptionElement.textContent.trim() : "";
+      });
 
-      return {
-        title,
-        url,
-        company,
-        location,
+      // Remove extra spaces and newlines from the description
+      description = description.replace(/\s+/g, " ").trim();
+
+      // Add title, company, tags, and description to the job details
+      const jobDetails = {
+        ...jobLink,
+        description,
       };
-    }, baseUrl);
 
-    websiteJobs.push(jobDetails);
+      websiteJobs.push(jobDetails);
+    } catch (error) {
+      console.error(`Error scraping job listing: ${error}`);
+    }
   }
 
   return websiteJobs;

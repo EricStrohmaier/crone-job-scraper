@@ -1,4 +1,6 @@
 async function scrapePompcryptojobs(page) {
+  await page.waitForSelector("article");
+
   const jobLinks = await page.evaluate(() => {
     const links = [];
     const jobElements = document.querySelectorAll("article");
@@ -15,24 +17,30 @@ async function scrapePompcryptojobs(page) {
   for (const jobLink of jobLinks) {
     await page.goto(jobLink);
     const jobDetails = await page.evaluate(() => {
-      const title = document
-        .querySelector("h1.details-header__title")
-        .textContent.trim();
-      const company = document
-        .querySelector(".listing-item__info--item-company")
-        .textContent.trim();
-      const location = document
-        .querySelector(".listing-item__info--item-location")
-        .textContent.trim();
-      const url = window.location.href;
+      const titleElement = document.querySelector("h1.details-header__title");
+      const companyElement = document.querySelector(
+        ".listing-item__info--item-company"
+      );
+      const locationElement = document.querySelector(
+        ".listing-item__info--item-location"
+      );
       const jobTypeElements = document.querySelectorAll(".job-type__value");
+      const descriptionElement = document.querySelector(
+        ".details-body__content"
+      );
+
+      const title = titleElement ? titleElement.textContent.trim() : "";
+      const company = companyElement ? companyElement.textContent.trim() : "";
+      const location = locationElement
+        ? locationElement.textContent.trim()
+        : "";
+      const url = window.location.href;
       const type = Array.from(jobTypeElements).map((element) =>
         element.textContent.trim()
       );
-      const description = document
-        .querySelector(".details-body__content")
-        .textContent.trim()
-        .replace(/\s+/g, " ");
+      const description = descriptionElement
+        ? descriptionElement.textContent.trim().replace(/\s+/g, " ")
+        : "";
 
       return {
         title,

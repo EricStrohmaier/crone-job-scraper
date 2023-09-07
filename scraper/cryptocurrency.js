@@ -1,5 +1,5 @@
 async function scrapeCryptocurrencyjobs(page, baseUrl) {
-  await page.waitForSelector("li.ais-Hits-item", { timeout: 60000 }); // Increase timeout to 60
+  await page.waitForSelector("li.ais-Hits-item", { timeout: 60000 }); // Increase timeout to 60 seconds
 
   const websiteJobs = await page.evaluate(async (baseUrl) => {
     const jobs = [];
@@ -12,18 +12,46 @@ async function scrapeCryptocurrencyjobs(page, baseUrl) {
       const locationElement = jobElement.querySelector("ul li.inline");
       const urlElement = titleElement;
 
-      if (titleElement && companyElement && locationElement && urlElement) {
+      if (titleElement) {
         const title = titleElement.textContent.trim();
-        const company = companyElement.textContent.trim();
-        const location = locationElement.textContent.trim();
+        const company = companyElement ? companyElement.textContent.trim() : "";
+        const location = locationElement
+          ? locationElement.textContent.trim()
+          : "";
         const url = new URL(urlElement.getAttribute("href"), baseUrl).href;
 
-        jobs.push({
-          title,
-          url,
-          company,
-          location,
-        });
+        // Extract additional data
+        const additionalDataElement =
+          jobElement.querySelector("div.col-start-1");
+        if (additionalDataElement) {
+          const details = additionalDataElement.textContent.trim();
+          const detailsArray = details.split("·").map((item) => item.trim());
+          const jobType = detailsArray[1];
+          const employmentType = detailsArray[3];
+          const salary = detailsArray[5];
+          const tagsElement = jobElement.querySelectorAll("ul li");
+          const tags = Array.from(tagsElement).map((tagElement) =>
+            tagElement.textContent.trim()
+          );
+
+          jobs.push({
+            title,
+            company,
+            location,
+            url,
+            jobType,
+            employmentType,
+            salary,
+            tags,
+          });
+        } else {
+          jobs.push({
+            title,
+            company,
+            location,
+            url,
+          });
+        }
       }
     }
 

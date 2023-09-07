@@ -1,6 +1,4 @@
 async function scrapeBitcoinerjobs(page, baseUrl) {
-  // page is the main url of the website
-  // Wait for the job listings to load
   await page.waitForSelector("ul.jobs");
 
   const jobLinks = await page.evaluate(() => {

@@ -6,7 +6,7 @@ const bitcoinerjobsScraper = require("./scraper/bitcoinerjobsScraper");
 const scrapeCryptoJobsList = require("./scraper/cryptoJobsListScraper");
 const scrapePompcryptojobs = require("./scraper/pomcryptojobs");
 const scrapeHirevibes = require("./scraper/hirevibes");
-const scrapeNiftyjobs = require("./scraper/niftyjobs");
+const scrapeLinkedInjobs = require("./scraper/linkedIn");
 const scrapeCryptovalley = require("./scraper/cryptovalley");
 const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
 
@@ -30,34 +30,35 @@ const websites = [
   },
   {
     name: "CryptoJobsList",
-    address: "https://cryptojobslist.com/",
+    address: "https://cryptojobslist.com/search?q=bitcoin&location=",
     base: "https://cryptojobslist.com",
   },
-  {
-    name: "Pompcryptojobs",
-    address: "https://pompcryptojobs.com/jobs/?q=bitcoin",
-    base: "",
-  },
+  // {
+  //   name: "Pompcryptojobs",
+  //   address: "https://pompcryptojobs.com/jobs/?q=bitcoin",
+  //   base: "",
+  // },
   {
     name: "Hirevibes",
     address: "https://app.hirevibes.com/jobs/bitcoin/--all--",
     base: "https://app.hirevibes.com",
   },
   {
-    name: "Niftyjobs",
-    address: "https://www.niftyjobs.io/",
+    name: "LinkedIn",
+    address:
+      "https://www.linkedin.com/jobs/search?keywords=Bitcoin&location=United%20States&locationId=&geoId=103644278&f_TPR=r604800",
     base: "",
-  },
-  {
-    name: "Cryptovalley",
-    address: "https://cryptovalley.jobs/",
-    base: "https://cryptovalley.jobs/",
   },
   {
     name: "Cryptocurrencyjobs",
     address: "https://cryptocurrencyjobs.co/?query=bitcoin",
     base: "https://cryptocurrencyjobs.co",
   },
+  // {
+  //   name: "Cryptovalley",
+  //   address: "https://cryptovalley.jobs/",
+  //   base: "https://cryptovalley.jobs/",
+  // },
 ];
 
 const jobData = {};
@@ -79,6 +80,9 @@ async function scrapeJobData(website) {
     });
 
     const page = await browser.newPage();
+
+    page.setDefaultNavigationTimeout(60000);
+
     await page.goto(website.address);
 
     let websiteJobs = [];
@@ -86,29 +90,33 @@ async function scrapeJobData(website) {
     if (website.name === "Bitcoinerjobs") {
       websiteJobs = await bitcoinerjobsScraper(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
-      // console.log("Bitcoinerjobs jobs:", websiteJobs);
+      console.log("Bitcoinerjobs jobs:", websiteJobs);
     } else if (website.name === "CryptoJobsList") {
       websiteJobs = await scrapeCryptoJobsList(page, website.base);
-      console.log("CryptoJobsList jobs:", websiteJobs);
-      // console.log("CryptoJobsList jobs:", websiteJobs.length);
-    } else if (website.name === "Pompcryptojobs") {
-      websiteJobs = await scrapePompcryptojobs(page);
-      console.log("Pompcryptojobs jobs:", websiteJobs.length);
-      // console.log("Pompcryptojobs jobs:", websiteJobs);
-    } else if (website.name === "Hirevibes") {
+      console.log("CryptoJobsList jobs:", websiteJobs.length);
+      // console.log("CryptoJobsList jobs:", websiteJobs);
+    }
+    //  if (website.name === "Pompcryptojobs") {
+    //   websiteJobs = await scrapePompcryptojobs(page);
+    //   console.log("Pompcryptojobs jobs:", websiteJobs.length);
+    //   // console.log("Pompcryptojobs jobs:", websiteJobs);
+    // } else
+    else if (website.name === "Hirevibes") {
       websiteJobs = await scrapeHirevibes(page, website.base);
       console.log("Hirevibes jobs:", websiteJobs.length);
-      console.log("Hirevibes jobs:", websiteJobs);
-    } else if (website.name === "Niftyjobs") {
-      websiteJobs = await scrapeNiftyjobs(page);
-      console.log("Niftyjobs jobs:", websiteJobs.length);
-    } else if (website.name === "Cryptovalley") {
-      websiteJobs = await scrapeCryptovalley(page, website.base);
-      console.log("Cryptovalley jobs:", websiteJobs.length);
+      // console.log("Hirevibes jobs:", websiteJobs);
+    } else if (website.name === "LinkedIn") {
+      websiteJobs = await scrapeLinkedInjobs(page);
+      console.log("LinkedIn jobs:", websiteJobs.length);
+      // console.log("LinkedIn jobs:", websiteJobs);
     } else if (website.name === "Cryptocurrencyjobs") {
       websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
       console.log("Cryptocurrencyjobs jobs:", websiteJobs.length);
+      // console.log("Cryptocurrencyjobs jobs:", websiteJobs);
     }
+    // else if (website.name === "Cryptovalley") {
+    //   websiteJobs = await scrapeCryptovalley(page, website.base);
+    //   console.log("Cryptovalley jobs:", websiteJobs.length);
 
     jobData[website.name] = websiteJobs;
 
