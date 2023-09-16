@@ -1,33 +1,60 @@
-
 async function scrapePompcryptojobs(page) {
-    const websiteJobs = await page.evaluate(async () => {
-        const jobs = [];
-        const jobElements = document.querySelectorAll('article');
+  await page.waitForSelector("article");
 
-        jobElements.forEach((jobElement) => {
-            const titleElement = jobElement.querySelector('.listing-item__title a');
-            const companyElement = jobElement.querySelector('.listing-item__info--item-company');
-            const locationElement = jobElement.querySelector('.listing-item__info--item-location');
-            
-            if (titleElement && companyElement && locationElement) {
-                const title = titleElement.textContent.trim();
-                const company = companyElement.textContent.trim();
-                const url = titleElement.href;
-                const location = locationElement.textContent.trim();
+  const jobLinks = await page.evaluate(() => {
+    const links = [];
+    const jobElements = document.querySelectorAll("article");
 
-                jobs.push({
-                    title,
-                    company,
-                    url,
-                    location
-                });
-            }
-        });
+    for (const jobElement of jobElements) {
+      const relativeUrl = jobElement.querySelector("a").getAttribute("href");
+      const fullUrl = new URL(relativeUrl, window.location.href).href;
+      links.push(fullUrl);
+    }
+    return links;
+  });
 
-        return jobs;
+  const websiteJobs = [];
+  for (const jobLink of jobLinks) {
+    await page.goto(jobLink);
+    const jobDetails = await page.evaluate(() => {
+      const titleElement = document.querySelector("h1.details-header__title");
+      const companyElement = document.querySelector(
+        ".listing-item__info--item-company"
+      );
+      const locationElement = document.querySelector(
+        ".listing-item__info--item-location"
+      );
+      const jobTypeElements = document.querySelectorAll(".job-type__value");
+      const descriptionElement = document.querySelector(
+        ".details-body__content"
+      );
+
+      const title = titleElement ? titleElement.textContent.trim() : "";
+      const company = companyElement ? companyElement.textContent.trim() : "";
+      const location = locationElement
+        ? locationElement.textContent.trim()
+        : "";
+      const url = window.location.href;
+      const type = Array.from(jobTypeElements).map((element) =>
+        element.textContent.trim()
+      );
+      const description = descriptionElement
+        ? descriptionElement.textContent.trim().replace(/\s+/g, " ")
+        : "";
+
+      return {
+        title,
+        company,
+        url,
+        location,
+        type,
+        description,
+      };
     });
+    websiteJobs.push(jobDetails);
+  }
 
-    return websiteJobs;
+  return websiteJobs;
 }
 
 module.exports = scrapePompcryptojobs;

@@ -1,40 +1,73 @@
-async function scrapeCryptoJobsList(page, baseUrl) {
-  await page.waitForSelector("li");
-  const websiteJobs = await page.evaluate(async (baseUrl) => {
-    const jobs = [];
+async function scrapeCryptoJobsList(page) {
+  // Get the list of job links
+  await page.waitForSelector("ul");
 
-    const jobElements = document.querySelectorAll(
-      "li.JobPreviewInline_JobPreviewInline__uAIxU"
-    );
+  const jobLinks = await page.evaluate(() => {
+    const links = [];
+    const jobElements = document.querySelectorAll("li.JobInline_job__W8MWi");
 
     for (const jobElement of jobElements) {
-      const titleElement = jobElement.querySelector(
-        "span.JobPreviewInline_jobTitle__WYzmvno-underline"
-      );
-      const companyElement = jobElement.querySelector(
-        "a.JobPreviewInline_companyName__5ffOt"
-      );
-      const locationElement = jobElement.querySelector(
-        "span.JobPreviewInline_jobLocation__dV9Hp"
-      );
+      const relativeUrl = jobElement.querySelector("a").getAttribute("href");
+      const fullUrl = new URL(relativeUrl, window.location.href).href;
+      const title = jobElement
+        .querySelector("span.JobInline_jobTitle__WWhIDno-underline")
+        .textContent.trim();
+      const company = jobElement
+        .querySelector("a.JobInline_companyName__89Bqd")
+        .textContent.trim();
+      const tags = Array.from(
+        jobElement.querySelectorAll("a.JobInline_jobLocation__RRLul")
+      ).map((tag) => tag.textContent.trim());
+      const applyUrl = {};
 
-      if (titleElement && companyElement && locationElement) {
-        const title = titleElement.textContent.trim();
-        const company = companyElement.textContent.trim();
-        const location = locationElement.textContent.trim();
-        const url = jobElement.querySelector("a").getAttribute("href");
-
-        jobs.push({
-          title,
-          url: baseUrl + url,
-          company,
-          location,
-        });
-      }
+      links.push({
+        url: fullUrl,
+        title,
+        company,
+        tags,
+        applyUrl,
+        location: "",
+        type: "",
+        category: "",
+        salary: "",
+      });
     }
 
-    return jobs;
-  }, baseUrl);
+    return links;
+  });
+
+  const websiteJobs = [];
+
+  for (const jobLink of jobLinks) {
+    try {
+      // Navigate to each job's page
+      await page.goto(jobLink.url);
+
+      // Wait for the relevant content to load
+      await page.waitForSelector(".JobView_description__tW863");
+
+      // Extract job description on the job's page
+      let description = await page.evaluate(() => {
+        const descriptionElement = document.querySelector(
+          ".JobView_description__tW863"
+        );
+        return descriptionElement ? descriptionElement.textContent.trim() : "";
+      });
+
+      // Remove extra spaces and newlines from the description
+      description = description.replace(/\s+/g, " ").trim();
+
+      // Add title, company, tags, and description to the job details
+      const jobDetails = {
+        ...jobLink,
+        description,
+      };
+
+      websiteJobs.push(jobDetails);
+    } catch (error) {
+      console.error(`Error scraping job listing: ${error}`);
+    }
+  }
 
   return websiteJobs;
 }

@@ -1,34 +1,54 @@
 async function scrapeHirevibes(page, baseUrl) {
-    const websiteJobs = await page.evaluate(async (baseUrl) => {
-        const jobs = [];
-        const jobElements = document.querySelectorAll('div.column');
+  const websiteJobs = await page.evaluate(async (baseUrl) => {
+    const jobs = [];
+    const jobElements = document.querySelectorAll("div.card.job");
 
-        for (const jobElement of jobElements) {
-            const titleElement = jobElement.querySelector('h2.job-title');
-            const companyElement = jobElement.querySelector('p.company a');
-            const locationElement = jobElement.querySelector('span.location');
+    for (const jobElement of jobElements) {
+      const titleElement = jobElement.querySelector("h2.job-title");
+      const companyElement = jobElement.querySelector("p.company a");
+      const locationElement = jobElement.querySelector("span.location");
+      const salaryElement = jobElement.querySelector("h2.is-salary");
+      const tagsElements = jobElement.querySelectorAll(
+        "div.segment.has-tooltip strong"
+      );
 
-            if (titleElement && companyElement && locationElement) {
-                const title = titleElement.textContent.trim();
-                const company = companyElement.textContent.trim();
-                const location = locationElement.textContent.trim();
-                const url = companyElement.getAttribute('href');
+      if (titleElement && companyElement && locationElement) {
+        const title = titleElement.textContent.trim();
+        const company = companyElement.textContent.trim();
+        const location = locationElement.textContent.trim();
+        const url = companyElement.getAttribute("href");
+        let salary = "";
+        const tags = [];
 
-                jobs.push({
-                    title,
-                    url: baseUrl + url,
-                    company,
-                    location
-                });
-            } else {
-                console.log('Missing job data for an element');
-            }
+        if (salaryElement) {
+          salary = salaryElement.textContent.trim().replace(/\s+/g, " ");
+        }
+        if (tagsElements) {
+          tagsElements.forEach((tagElement) => {
+            tags.push(tagElement.textContent.trim());
+          });
         }
 
-        return jobs;
-    }, baseUrl);
+        jobs.push({
+          title,
+          url: baseUrl + url,
+          applyUrl: "",
+          company,
+          location,
+          salary,
+          type: "",
+          category: "",
+          tags,
+        });
+      } else {
+        console.log("Missing job data for an element");
+      }
+    }
 
-    return websiteJobs;
+    return jobs;
+  }, baseUrl);
+
+  return websiteJobs;
 }
 
 module.exports = scrapeHirevibes;
