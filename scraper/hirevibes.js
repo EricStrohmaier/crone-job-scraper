@@ -8,7 +8,9 @@ async function scrapeHirevibes(page, baseUrl) {
       const companyElement = jobElement.querySelector("p.company a");
       const locationElement = jobElement.querySelector("span.location");
       const salaryElement = jobElement.querySelector("h2.is-salary");
-      // const tagsElements = jobElement.querySelectorAll("div.segment.has-tooltip strong");
+      const tagsElements = jobElement.querySelectorAll(
+        "div.segment.has-tooltip strong"
+      );
 
       if (titleElement && companyElement && locationElement) {
         const title = titleElement.textContent.trim();
@@ -16,23 +18,27 @@ async function scrapeHirevibes(page, baseUrl) {
         const location = locationElement.textContent.trim();
         const url = companyElement.getAttribute("href");
         let salary = "";
-        // const tags = [];
+        const tags = [];
 
         if (salaryElement) {
           salary = salaryElement.textContent.trim().replace(/\s+/g, " ");
         }
-
-        // tagsElements.forEach((tagElement) => {
-        //   tags.push(tagElement.textContent.trim());
-        // });
+        if (tagsElements) {
+          tagsElements.forEach((tagElement) => {
+            tags.push(tagElement.textContent.trim());
+          });
+        }
 
         jobs.push({
           title,
           url: baseUrl + url,
+          applyUrl: "",
           company,
           location,
           salary,
-          // tags,
+          type: "",
+          category: "",
+          tags,
         });
       } else {
         console.log("Missing job data for an element");

@@ -33,11 +33,6 @@ const websites = [
     address: "https://cryptojobslist.com/search?q=bitcoin&location=",
     base: "https://cryptojobslist.com",
   },
-  // {
-  //   name: "Pompcryptojobs",
-  //   address: "https://pompcryptojobs.com/jobs/?q=bitcoin",
-  //   base: "",
-  // },
   {
     name: "Hirevibes",
     address: "https://app.hirevibes.com/jobs/bitcoin/--all--",
@@ -90,18 +85,12 @@ async function scrapeJobData(website) {
     if (website.name === "Bitcoinerjobs") {
       websiteJobs = await bitcoinerjobsScraper(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
-      console.log("Bitcoinerjobs jobs:", websiteJobs);
+      // console.log("Bitcoinerjobs jobs:", websiteJobs);
     } else if (website.name === "CryptoJobsList") {
       websiteJobs = await scrapeCryptoJobsList(page, website.base);
       console.log("CryptoJobsList jobs:", websiteJobs.length);
       // console.log("CryptoJobsList jobs:", websiteJobs);
-    }
-    //  if (website.name === "Pompcryptojobs") {
-    //   websiteJobs = await scrapePompcryptojobs(page);
-    //   console.log("Pompcryptojobs jobs:", websiteJobs.length);
-    //   // console.log("Pompcryptojobs jobs:", websiteJobs);
-    // } else
-    else if (website.name === "Hirevibes") {
+    } else if (website.name === "Hirevibes") {
       websiteJobs = await scrapeHirevibes(page, website.base);
       console.log("Hirevibes jobs:", websiteJobs.length);
       // console.log("Hirevibes jobs:", websiteJobs);
@@ -128,21 +117,10 @@ async function scrapeJobData(website) {
         .eq("title", job.title)
 
         .single();
+      // console.log("exitsting data ", existingData);
 
       if (!existingData) {
-        //   const getDescription = async ()  => {
-        //     try {
-        //         const data = await fetch("", {
-        //             method: "POST",
-        //             body: JSON.stringify({ description }),
-        //         });
-        //         const { error, description } = await data.json();
-
-        //     } catch (error) {
-        //         console.error("An error occurred while parsing:", error);
-        //     }
-        // };
-
+        // console.log("job new? ", job.url);
         // Insert the job only if it doesn't exist
         const { data, error } = await supabase.from(website.name).insert([
           {
@@ -150,16 +128,21 @@ async function scrapeJobData(website) {
             url: job.url,
             company: job.company,
             location: job.location,
-            description: job.description,
-            remote: job.remote,
             type: job.type,
             tags: job.tags,
             salary: job.salary,
             category: job.category,
-            postedAt: job.postedAt,
-            applyURL: job.constructApplyUrl,
+            // postedAt: job.postedAt,
+            applyURL: job.applyUrl,
+            // description: job.description,
+            // remote: job.remote,
           },
         ]);
+        console.log("Jobs inserted:", data);
+
+        if (error) {
+          console.error("Error inserting job data:", error);
+        }
       }
     }
 

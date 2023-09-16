@@ -26,21 +26,23 @@ async function scrapeCryptocurrencyjobs(page, baseUrl) {
         if (additionalDataElement) {
           const details = additionalDataElement.textContent.trim();
           const detailsArray = details.split("·").map((item) => item.trim());
-          const jobType = detailsArray[1];
-          const employmentType = detailsArray[3];
+          const category = detailsArray[1];
+          const type = detailsArray[3];
           const salary = detailsArray[5];
           const tagsElement = jobElement.querySelectorAll("ul li");
           const tags = Array.from(tagsElement).map((tagElement) =>
             tagElement.textContent.trim()
           );
+          const applyUrl = {};
 
           jobs.push({
             title,
             company,
             location,
             url,
-            jobType,
-            employmentType,
+            applyUrl,
+            category,
+            type,
             salary,
             tags,
           });

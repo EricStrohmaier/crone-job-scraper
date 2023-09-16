@@ -30,18 +30,20 @@ async function scrapeBitcoinerjobs(page, baseUrl) {
       const url = new URL(window.location.href).href;
 
       const applyButton = document.querySelector(".buttons a");
-      const applyUrl = applyButton ? applyButton.getAttribute("href") : null;
-      let constructApplyUrl; // Declare the variable in the outer scope
+      const constructApplyUrl = applyButton
+        ? applyButton.getAttribute("href")
+        : null;
+      let applyUrl; // Declare the variable in the outer scope
 
-      if (applyUrl === null) {
+      if (constructApplyUrl === null) {
         const url = window.location.href; // Or some other default URL
-        constructApplyUrl = url;
-      } else if (applyUrl.startsWith("mailto")) {
+        applyUrl = url;
+      } else if (constructApplyUrl.startsWith("mailto")) {
         // It's a mailto link, do something here or simply return
-        constructApplyUrl = applyUrl;
+        applyUrl = constructApplyUrl;
       } else {
         // It's not a mailto link, construct the URL with baseUrl
-        constructApplyUrl = baseUrl + applyUrl;
+        applyUrl = baseUrl + constructApplyUrl;
       }
 
       const locationElement = document.querySelector(".location");
@@ -49,10 +51,10 @@ async function scrapeBitcoinerjobs(page, baseUrl) {
         ? locationElement.textContent.trim()
         : "";
 
-      const descriptionElement = document.querySelector(".description");
-      const description = descriptionElement
-        ? descriptionElement.textContent.trim()
-        : "";
+      // const descriptionElement = document.querySelector(".description");
+      // const description = descriptionElement
+      //   ? descriptionElement.textContent.trim()
+      //   : "";
 
       const remoteElement = document.querySelector(".location .remote");
       const remote = remoteElement ? remoteElement.textContent.trim() : "";
@@ -73,24 +75,16 @@ async function scrapeBitcoinerjobs(page, baseUrl) {
         ? Array.from(tagsElements).map((tag) => tag.textContent.trim())
         : [];
 
-      const postedAtElement = document.querySelector(".posted_at");
-      const postedAt = postedAtElement
-        ? postedAtElement.textContent.trim()
-        : "";
-
       return {
         url,
-        constructApplyUrl,
+        applyUrl,
         title,
         company,
         location,
-        remote,
         type,
         category,
         salary,
         tags,
-        postedAt,
-        description,
       };
     }, baseUrl);
 

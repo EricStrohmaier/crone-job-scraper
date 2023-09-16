@@ -18,12 +18,18 @@ async function scrapeCryptoJobsList(page) {
       const tags = Array.from(
         jobElement.querySelectorAll("a.JobInline_jobLocation__RRLul")
       ).map((tag) => tag.textContent.trim());
+      const applyUrl = {};
 
       links.push({
         url: fullUrl,
         title,
         company,
         tags,
+        applyUrl,
+        location: "",
+        type: "",
+        category: "",
+        salary: "",
       });
     }
 
