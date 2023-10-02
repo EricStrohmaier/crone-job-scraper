@@ -1,5 +1,18 @@
+const { createClient } = require("@supabase/supabase-js");
+
+const supabaseUrl = "https://hnfpcsanqackenyhtoep.supabase.co";
+const supabaseKey = process.env.PUPLIC_SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 async function scrapeBitcoinerjobs(page, baseUrl) {
   await page.waitForSelector("ul.jobs");
+
+  // //check if jobLink already exist in db
+  const { data: existingJobs } = await supabase
+    .from("Bitcoinerjobs")
+    .select("*");
+
+  const jobLinksArray = [];
 
   const jobLinks = await page.evaluate(() => {
     // Extract the URLs of all job listings
@@ -11,13 +24,27 @@ async function scrapeBitcoinerjobs(page, baseUrl) {
       const fullUrl = new URL(relativeUrl, window.location.href).href;
       links.push(fullUrl);
     }
-
     return links;
   });
+  //check here if already exist in db? if yes, skip
 
   const websiteJobs = [];
 
+  jobLinksArray.push(jobLinks);
+
   for (const jobLink of jobLinks) {
+    if (jobLink) {
+      const jobLinkExists = existingJobs.some((job) => job.url === jobLink);
+      console.log("joblinkexist? : ", jobLinkExists);
+      console.log(
+        "joblinkexist? data flow : ",
+        existingJobs.some((job) => job.url)
+      );
+      if (jobLinkExists) {
+        continue;
+      }
+    }
+
     await page.goto(jobLink); // Navigate to the job's page
 
     // Wait for the relevant content to load
