@@ -1,31 +1,46 @@
-const puppeteer = require('puppeteer');
+const { job } = require("cron");
 
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+async function scrapeMigodi(page, baseUrl) {
+    const jobDetails = [];
+  
+    await page.waitForSelector('.elementor-toggle-item');
+  
+    // Get the sections
+    const sections = await page.$$('.elementor-toggle-item');
+  
+    const jobList = [];
+  
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+  
+      // Extract the title of the current section
+      const title = await section.$eval('a.elementor-toggle-title', (element) => element.textContent);
+  
+      // Extract the first two paragraphs of the current section
+      const paragraphs = await section.$$eval('p', (elements) => {
+        return elements.slice(0, 2).map((element) => element.textContent);
+      });
+  
+      // Push section details to the job list
+      jobList.push({
+        title,
+        url: baseUrl,
+        location: paragraphs[0],
+        category: paragraphs[1],
+        company: "Migodi",
+        tags: [],
+        salary: "",
+        type: "",
+        applyUrl: baseUrl,
 
-  await page.goto('https://www.migodi.com/jobs'); // Replace with the actual URL
 
-  // Wait for the sections with the class "elementor-toggle-item" to be available
-  await page.waitForSelector('.elementor-toggle-item');
+      });
+  
+   }
+  //pushing the job details to the job list
+   jobDetails.push(...jobList);
 
-  // Get the number of sections
-  const sections = await page.$$('.elementor-toggle-item');
-
-  for (let i = 0; i < sections.length; i++) {
-    // Extract the title of the current section
-    const title = await sections[i].$eval('a.elementor-toggle-title', (element) => element.textContent);
-
-    // Extract the first two paragraphs of the current section
-    const paragraphs = await sections[i].$$eval('p', (elements) => {
-      return elements.slice(0, 2).map((element) => element.textContent);
-    });
-
-    // Log the title and paragraphs of the current section
-    console.log(`Title of Section ${i + 1}: ${title}`);
-    console.log(`Paragraphs of Section ${i + 1}:`, paragraphs);
+    return jobDetails;
   }
-
-  // Close the browser
-  await browser.close();
-})();
+  
+  module.exports = scrapeMigodi;

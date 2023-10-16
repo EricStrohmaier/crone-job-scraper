@@ -1,24 +1,16 @@
-const puppeteer = require("puppeteer");
-
-const url = "https://bitfinex.recruitee.com/";
-
-(async () => {
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
-
-  await page.goto("https://bitfinex.recruitee.com/");
+async function scrapeBitfinex(page, baseUrl) {
+  const jobDetails = [];
 
   const jobLinks = await page.$$eval(".job-title a", (elements) =>
     elements.map((element) => element.getAttribute("href"))
   );
 
   for (const link of jobLinks) {
-    await page.goto(url + link);
+    await page.goto(baseUrl + link);
     const pageContent = await page.evaluate(() => document.body.textContent);
 
-
     if (pageContent.includes("bitcoin") || pageContent.includes("Bitcoin")) {
-      console.log(`'bitcoin' found on ${link}`);
+      //   console.log(`'bitcoin' found on ${link}`);
 
       await page.waitForSelector(".info-container");
 
@@ -28,14 +20,26 @@ const url = "https://bitfinex.recruitee.com/";
         const liText = document.querySelector(".info li").textContent;
         return { title, liText };
       });
-      console.log("Job Lik:",url + link);
-      console.log("Title:", jobInfo.title);
-      console.log("LI Text Content:", jobInfo.liText);
+      //push to array and return
+      // console.log("jobLItext", jobInfo.liText);
+
+      jobDetails.push({
+        title: jobInfo.title,
+        url: baseUrl + link,
+        location: "",
+        type: "",
+        company: "Bitfinex",
+        tags: [],
+        salary: "",
+        category: jobInfo.liText,
+        applyUrl: baseUrl + link,
+      });
     } else {
-      console.log(`'bitcoin' not found on ${link}`);
+    //   console.log(`'bitcoin' not found on ${link}`);
     }
     await page.goBack();
   }
+  return jobDetails;
+}
 
-  await browser.close();
-})();
+module.exports = scrapeBitfinex;
