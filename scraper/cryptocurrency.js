@@ -33,7 +33,7 @@ async function scrapeCryptocurrencyjobs(page, baseUrl) {
           const tags = Array.from(tagsElement).map((tagElement) =>
             tagElement.textContent.trim()
           );
-          const applyUrl = {};
+          const applyUrl = "";
 
           jobs.push({
             title,

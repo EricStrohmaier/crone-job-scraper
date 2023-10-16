@@ -58,10 +58,10 @@ const websites = [
 
 const jobData = {};
 
-// Define a route to access the scraped job data
-app.get("/", (req, res) => {
-  res.json(jobData); // Return the jobData object as JSON response
-});
+// // Define a route to access the scraped job data
+// app.get("/", (req, res) => {
+//   res.json(jobData); // Return the jobData object as JSON response
+// });
 
 async function scrapeJobData(website) {
   try {
@@ -85,11 +85,12 @@ async function scrapeJobData(website) {
     if (website.name === "Bitcoinerjobs") {
       websiteJobs = await bitcoinerjobsScraper(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
+      console.log("Bitcoinerjobs jobs:", websiteJobs);
       // console.log("Bitcoinerjobs jobs:", websiteJobs);
     } else if (website.name === "CryptoJobsList") {
       websiteJobs = await scrapeCryptoJobsList(page, website.base);
       console.log("CryptoJobsList jobs:", websiteJobs.length);
-      // console.log("CryptoJobsList jobs:", websiteJobs);
+      console.log("CryptoJobsList jobs:", websiteJobs);
     } else if (website.name === "Hirevibes") {
       websiteJobs = await scrapeHirevibes(page, website.base);
       console.log("Hirevibes jobs:", websiteJobs.length);
@@ -103,9 +104,6 @@ async function scrapeJobData(website) {
       console.log("Cryptocurrencyjobs jobs:", websiteJobs.length);
       // console.log("Cryptocurrencyjobs jobs:", websiteJobs);
     }
-    // else if (website.name === "Cryptovalley") {
-    //   websiteJobs = await scrapeCryptovalley(page, website.base);
-    //   console.log("Cryptovalley jobs:", websiteJobs.length);
 
     jobData[website.name] = websiteJobs;
 
@@ -118,6 +116,7 @@ async function scrapeJobData(website) {
 
         .single();
       // console.log("exitsting data ", existingData);
+      //add existingdata to array
 
       if (!existingData) {
         // console.log("job new? ", job.url);
@@ -158,9 +157,9 @@ async function scraperjobs() {
   }
 }
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`App listening on port ${port}`);
+// });
 
 //    ('0 */8 * * * ')    //every 8 hours
 console.log(
