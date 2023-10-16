@@ -1,0 +1,21 @@
+
+    [
+        {
+          "this jobs are difficult to scrape":""
+        },
+        {
+          "name": "CryptoJobsList",
+          "address": "https://cryptojobslist.com/search?q=bitcoin&location=",
+          "base": "https://cryptojobslist.com"
+        },
+        {
+          "name": "Hirevibes",
+          "address": "https://app.hirevibes.com/jobs/bitcoin/--all--",
+          "base": "https://app.hirevibes.com"
+        }
+        
+        
+      ]
+      
+
+  

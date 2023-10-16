@@ -1,22 +1,36 @@
+const Sentry = require("@sentry/node");
+const { ProfilingIntegration } = require("@sentry/profiling-node");
 const express = require("express");
 const puppeteer = require("puppeteer-extra");
-const { CronJob } = require("cron");
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const CronJob = require("cron").CronJob;
 const { createClient } = require("@supabase/supabase-js");
 const bitcoinerjobsScraper = require("./scraper/bitcoinerjobsScraper");
 const scrapeCryptoJobsList = require("./scraper/cryptoJobsListScraper");
-const scrapePompcryptojobs = require("./scraper/pomcryptojobs");
-const scrapeHirevibes = require("./scraper/hirevibes");
-const scrapeLinkedInjobs = require("./scraper/linkedIn");
-const scrapeCryptovalley = require("./scraper/cryptovalley");
-const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
+const scrapeBTCSuisse = require("./scraper/btc-suisse");
 
-const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 puppeteer.use(StealthPlugin());
 
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+Sentry.init({
+  dsn: 'https://317ccb29737a10183da222cb987f5249@o4506060544802816.ingest.sentry.io/4506060547883008',
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // enable Express.js middleware tracing
+    new Sentry.Integrations.Express({ app }),
+    new ProfilingIntegration(),
+  ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0,
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+});
+
 
 const supabaseUrl = "https://hnfpcsanqackenyhtoep.supabase.co";
 const supabaseKey = process.env.PUPLIC_SUPABASE_KEY;
@@ -29,34 +43,23 @@ const websites = [
     base: "",
   },
   {
-    name: "CryptoJobsList",
-    address: "https://cryptojobslist.com/search?q=bitcoin&location=",
-    base: "https://cryptojobslist.com",
-  },
-  {
-    name: "Hirevibes",
-    address: "https://app.hirevibes.com/jobs/bitcoin/--all--",
-    base: "https://app.hirevibes.com",
-  },
-  {
-    name: "LinkedIn",
-    address:
-      "https://www.linkedin.com/jobs/search?keywords=Bitcoin&location=United%20States&locationId=&geoId=103644278&f_TPR=r604800",
-    base: "",
-  },
-  {
     name: "Cryptocurrencyjobs",
     address: "https://cryptocurrencyjobs.co/?query=bitcoin",
     base: "https://cryptocurrencyjobs.co",
   },
-  // {
-  //   name: "Cryptovalley",
-  //   address: "https://cryptovalley.jobs/",
-  //   base: "https://cryptovalley.jobs/",
-  // },
+  {
+    name: "BTC-Suisse",
+    address: "https://bitcoin-suisse.onlyfy.jobs/",
+    base: "",
+  },
+
 ];
 
 const jobData = {};
+app.use(Sentry.Handlers.requestHandler());
+
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
 
 // Define a route to access the scraped job data
 app.get("/", (req, res) => {
@@ -65,7 +68,7 @@ app.get("/", (req, res) => {
 
 async function scrapeJobData(website) {
   try {
-    const browser = await puppeteer.launch({
+    const browser = await launch({
       headless: "new", // Run in headless mode
       args: [
         "--no-sandbox",
@@ -90,23 +93,12 @@ async function scrapeJobData(website) {
       websiteJobs = await scrapeCryptoJobsList(page, website.base);
       console.log("CryptoJobsList jobs:", websiteJobs.length);
       // console.log("CryptoJobsList jobs:", websiteJobs);
-    } else if (website.name === "Hirevibes") {
-      websiteJobs = await scrapeHirevibes(page, website.base);
-      console.log("Hirevibes jobs:", websiteJobs.length);
-      // console.log("Hirevibes jobs:", websiteJobs);
-    } else if (website.name === "LinkedIn") {
-      websiteJobs = await scrapeLinkedInjobs(page);
-      console.log("LinkedIn jobs:", websiteJobs.length);
-      // console.log("LinkedIn jobs:", websiteJobs);
-    } else if (website.name === "Cryptocurrencyjobs") {
-      websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
-      console.log("Cryptocurrencyjobs jobs:", websiteJobs.length);
-      // console.log("Cryptocurrencyjobs jobs:", websiteJobs);
+    } else if (website.name === "BTC-Suisse") {
+      websiteJobs = await scrapeBTCSuisse(page);
+      console.log("BTC-Suisse jobs:", websiteJobs.length);
+      console.log("BTC-Suisse jobs:", websiteJobs);
     }
-    // else if (website.name === "Cryptovalley") {
-    //   websiteJobs = await scrapeCryptovalley(page, website.base);
-    //   console.log("Cryptovalley jobs:", websiteJobs.length);
-
+ 
     jobData[website.name] = websiteJobs;
 
     for (const job of websiteJobs) {
@@ -158,11 +150,8 @@ async function scraperjobs() {
   }
 }
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
 
-//    ('0 */8 * * * ')    //every 8 hours
+
 console.log(
   "Scraperjobs starting... Right now the cron job is set to run every 2 hours."
 );
@@ -176,4 +165,21 @@ fetchJobData.start();
 
 scraperjobs(); // Call the function to initiate scraping
 
-module.exports = app;
+
+
+
+
+app.use(Sentry.Handlers.errorHandler());
+
+// Optional fallthrough error handler
+app.use(function onError(err, req, res, next) {
+  // The error id is attached to `res.sentry` to be returned
+  // and optionally displayed to the user for support.
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+});
+
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
+});
+
