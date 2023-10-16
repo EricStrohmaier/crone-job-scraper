@@ -83,6 +83,7 @@ app.get("/", (req, res) => {
   res.json(jobData); // Return the jobData object as JSON response
 });
 
+
 async function scrapeJobData(website) {
   try {
     const browser = await puppeteer.launch({
@@ -105,7 +106,9 @@ async function scrapeJobData(website) {
     if (website.name === "Bitcoinerjobs") {
       websiteJobs = await scrapeBitcoinerjobs(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
+      console.log("Bitcoinerjobs jobs:", websiteJobs);
       // console.log("Bitcoinerjobs jobs:", websiteJobs);
+
     } else if (website.name === "Cryptocurrencyjobs") {
       websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
       console.log("CryptoJobsList jobs:", websiteJobs.length);
@@ -139,6 +142,7 @@ async function scrapeJobData(website) {
 
         .single();
       // console.log("exitsting data ", existingData);
+      //add existingdata to array
 
       if (!existingData) {
         // console.log("job new? ", job.url);
@@ -178,6 +182,7 @@ async function scraperjobs() {
     await scrapeJobData(website);
   }
 }
+
 
 console.log(
   "Scraperjobs starting... Right now the cron job is set to run every 2 hours."
