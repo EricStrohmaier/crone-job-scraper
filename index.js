@@ -1,16 +1,20 @@
+const Sentry = require("@sentry/node");
+const { ProfilingIntegration } = require("@sentry/profiling-node");
 const express = require("express");
 const puppeteer = require("puppeteer-extra");
-const { CronJob } = require("cron");
-const { createClient } = require("@supabase/supabase-js");
-const bitcoinerjobsScraper = require("./scraper/bitcoinerjobsScraper");
-const scrapeCryptoJobsList = require("./scraper/cryptoJobsListScraper");
-const scrapePompcryptojobs = require("./scraper/pomcryptojobs");
-const scrapeHirevibes = require("./scraper/hirevibes");
-const scrapeLinkedInjobs = require("./scraper/linkedIn");
-const scrapeCryptovalley = require("./scraper/cryptovalley");
-const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
-
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const CronJob = require("cron").CronJob;
+const { createClient } = require("@supabase/supabase-js");
+const scrapeBitcoinerjobs = require("./scraper/bitcoinerjobsScraper");
+const scrapeBTCSuisse = require("./scraper/btc-suisse");
+const scrapeBitfinex = require("./scraper/bitfinex");
+const scrapeBitrefill = require("./scraper/bitrefill");
+const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
+const scrapeMigodi = require("./scraper/migodi");
+const scrapeTramell = require("./scraper/tramell");
+const scrapeRiver = require("./scraper/river");
+const scrapeBitGo = require("./scraper/bitgo");
+
 puppeteer.use(StealthPlugin());
 
 require("dotenv").config();
@@ -18,8 +22,23 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+Sentry.init({
+  dsn: "https://317ccb29737a10183da222cb987f5249@o4506060544802816.ingest.sentry.io/4506060547883008",
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // enable Express.js middleware tracing
+    new Sentry.Integrations.Express({ app }),
+    new ProfilingIntegration(),
+  ],
+  // Performance Monitoring
+  tracesSampleRate: 1.0,
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+});
+
 const supabaseUrl = "https://hnfpcsanqackenyhtoep.supabase.co";
-const supabaseKey = process.env.PUPLIC_SUPABASE_KEY;
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const websites = [
@@ -29,44 +48,63 @@ const websites = [
     base: "",
   },
   {
-    name: "CryptoJobsList",
-    address: "https://cryptojobslist.com/search?q=bitcoin&location=",
-    base: "https://cryptojobslist.com",
-  },
-  {
-    name: "Hirevibes",
-    address: "https://app.hirevibes.com/jobs/bitcoin/--all--",
-    base: "https://app.hirevibes.com",
-  },
-  {
-    name: "LinkedIn",
-    address:
-      "https://www.linkedin.com/jobs/search?keywords=Bitcoin&location=United%20States&locationId=&geoId=103644278&f_TPR=r604800",
-    base: "",
-  },
-  {
     name: "Cryptocurrencyjobs",
     address: "https://cryptocurrencyjobs.co/?query=bitcoin",
     base: "https://cryptocurrencyjobs.co",
   },
-  // {
-  //   name: "Cryptovalley",
-  //   address: "https://cryptovalley.jobs/",
-  //   base: "https://cryptovalley.jobs/",
-  // },
+  {
+    name: "BTC-Suisse",
+    address: "https://bitcoin-suisse.onlyfy.jobs/",
+    base: "",
+  },
+  {
+    name: "Bitfinex",
+    address: "https://bitfinex.recruitee.com/",
+    base: "https://bitfinex.recruitee.com",
+  },
+  {
+    name: "Bitrefill",
+    address: "https://careers.bitrefill.com/jobs",
+    base: "",
+  },
+  {
+    name: "Migodi",
+    address: "https://www.migodi.com/jobs/",
+    base: "https://www.migodi.com/jobs/",
+  },
+  {
+    name: "Tramell",
+    address: "https://tvp.fund/jobs/",
+    base: "https://tvp.fund",
+  },
+  {
+    name: "River",
+    address: "https://boards.greenhouse.io/riverfinancial",
+    base: "https://boards.greenhouse.io/riverfinancial",
+  },
+  {
+    name: "BitGo",
+    address: "https://boards.greenhouse.io/bitgo",
+    base: "https://boards.greenhouse.io/bitgo",
+  },
 ];
 
 const jobData = {};
 
-// // Define a route to access the scraped job data
-// app.get("/", (req, res) => {
-//   res.json(jobData); // Return the jobData object as JSON response
-// });
+app.use(Sentry.Handlers.requestHandler());
+
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+// Define a route to access the scraped job data
+app.get("/", (req, res) => {
+  res.json(jobData); // Return the jobData object as JSON response
+});
 
 async function scrapeJobData(website) {
   try {
     const browser = await puppeteer.launch({
-      headless: "new", // Run in headless mode
+      headless: "new",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -83,26 +121,42 @@ async function scrapeJobData(website) {
     let websiteJobs = [];
 
     if (website.name === "Bitcoinerjobs") {
-      websiteJobs = await bitcoinerjobsScraper(page, website.address);
+      websiteJobs = await scrapeBitcoinerjobs(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
-      console.log("Bitcoinerjobs jobs:", websiteJobs);
       // console.log("Bitcoinerjobs jobs:", websiteJobs);
-    } else if (website.name === "CryptoJobsList") {
-      websiteJobs = await scrapeCryptoJobsList(page, website.base);
-      console.log("CryptoJobsList jobs:", websiteJobs.length);
-      console.log("CryptoJobsList jobs:", websiteJobs);
-    } else if (website.name === "Hirevibes") {
-      websiteJobs = await scrapeHirevibes(page, website.base);
-      console.log("Hirevibes jobs:", websiteJobs.length);
-      // console.log("Hirevibes jobs:", websiteJobs);
-    } else if (website.name === "LinkedIn") {
-      websiteJobs = await scrapeLinkedInjobs(page);
-      console.log("LinkedIn jobs:", websiteJobs.length);
-      // console.log("LinkedIn jobs:", websiteJobs);
+      // console.log("Bitcoinerjobs jobs:", websiteJobs);
     } else if (website.name === "Cryptocurrencyjobs") {
       websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
-      console.log("Cryptocurrencyjobs jobs:", websiteJobs.length);
-      // console.log("Cryptocurrencyjobs jobs:", websiteJobs);
+      console.log("CryptoJobsList jobs:", websiteJobs.length);
+      // console.log("CryptoJobsList jobs:", websiteJobs);
+    } else if (website.name === "BTC-Suisse") {
+      websiteJobs = await scrapeBTCSuisse(page);
+      console.log("BTC-Suisse jobs:", websiteJobs.length);
+      //console.log("BTC-Suisse jobs:", websiteJobs);
+    } else if (website.name === "Bitfinex") {
+      websiteJobs = await scrapeBitfinex(page, website.base);
+      console.log("Bitfinex jobs:", websiteJobs.length);
+      // console.log("bitfinex jobs:", websiteJobs);
+    } else if (website.name === "Bitrefill") {
+      websiteJobs = await scrapeBitrefill(page);
+      console.log("Bitrefill jobs:", websiteJobs.length);
+      // console.log("Bitrefill jobs:", websiteJobs);
+    } else if (website.name === "Migodi") {
+      websiteJobs = await scrapeMigodi(page, website.base);
+      console.log("Migodi jobs:", websiteJobs.length);
+      // console.log("Migodi jobs:", websiteJobs);
+    } else if (website.name === "Tramell") {
+      websiteJobs = await scrapeTramell(page, website.base);
+      console.log("Tramell jobs:", websiteJobs.length);
+      // console.log("Tramell jobs:", websiteJobs);
+    } else if (website.name === "River") {
+      websiteJobs = await scrapeRiver(page, website.base);
+      console.log("River jobs:", websiteJobs.length);
+      // console.log("River jobs:", websiteJobs);
+    } else if (website.name === "BitGo") {
+      websiteJobs = await scrapeBitGo(page, website.base);
+      console.log("BitGo jobs:", websiteJobs.length);
+      console.log("BitGo jobs:", websiteJobs);
     }
 
     jobData[website.name] = websiteJobs;
@@ -131,10 +185,7 @@ async function scrapeJobData(website) {
             tags: job.tags,
             salary: job.salary,
             category: job.category,
-            // postedAt: job.postedAt,
             applyURL: job.applyUrl,
-            // description: job.description,
-            // remote: job.remote,
           },
         ]);
         console.log("Jobs inserted:", data);
@@ -157,11 +208,6 @@ async function scraperjobs() {
   }
 }
 
-// app.listen(port, () => {
-//   console.log(`App listening on port ${port}`);
-// });
-
-//    ('0 */8 * * * ')    //every 8 hours
 console.log(
   "Scraperjobs starting... Right now the cron job is set to run every 2 hours."
 );
@@ -175,4 +221,16 @@ fetchJobData.start();
 
 scraperjobs(); // Call the function to initiate scraping
 
-module.exports = app;
+app.use(Sentry.Handlers.errorHandler());
+
+// Optional fallthrough error handler
+app.use(function onError(err, req, res, next) {
+  // The error id is attached to `res.sentry` to be returned
+  // and optionally displayed to the user for support.
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+});
+
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
+});
