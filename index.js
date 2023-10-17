@@ -74,7 +74,7 @@ const websites = [
     name: "Tramell",
     address: "https://tvp.fund/jobs/",
     base: "https://tvp.fund",
-  }
+  },
 ];
 
 const jobData = {};
@@ -88,7 +88,6 @@ app.use(Sentry.Handlers.tracingHandler());
 app.get("/", (req, res) => {
   res.json(jobData); // Return the jobData object as JSON response
 });
-
 
 async function scrapeJobData(website) {
   try {
@@ -114,7 +113,6 @@ async function scrapeJobData(website) {
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
       console.log("Bitcoinerjobs jobs:", websiteJobs);
       // console.log("Bitcoinerjobs jobs:", websiteJobs);
-
     } else if (website.name === "Cryptocurrencyjobs") {
       websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
       console.log("CryptoJobsList jobs:", websiteJobs.length);
@@ -189,7 +187,6 @@ async function scraperjobs() {
     await scrapeJobData(website);
   }
 }
-
 
 console.log(
   "Scraperjobs starting... Right now the cron job is set to run every 2 hours."
