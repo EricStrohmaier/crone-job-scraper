@@ -38,7 +38,7 @@ Sentry.init({
 });
 
 const supabaseUrl = "https://hnfpcsanqackenyhtoep.supabase.co";
-const supabaseKey = process.env.PUBLIC_SUPABASE_KEY;
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const websites = [
