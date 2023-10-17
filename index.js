@@ -12,6 +12,8 @@ const scrapeBitrefill = require("./scraper/bitrefill");
 const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
 const scrapeMigodi = require("./scraper/migodi");
 const scrapeTramell = require("./scraper/tramell");
+const scrapeRiver = require("./scraper/river");
+const scrapeBitGo = require("./scraper/bitgo");
 
 puppeteer.use(StealthPlugin());
 
@@ -36,7 +38,7 @@ Sentry.init({
 });
 
 const supabaseUrl = "https://hnfpcsanqackenyhtoep.supabase.co";
-const supabaseKey = process.env.PUPLIC_SUPABASE_KEY;
+const supabaseKey = process.env.PUBLIC_SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const websites = [
@@ -74,6 +76,16 @@ const websites = [
     name: "Tramell",
     address: "https://tvp.fund/jobs/",
     base: "https://tvp.fund",
+  },
+  {
+    name: "River",
+    address: "https://boards.greenhouse.io/riverfinancial",
+    base:"https://boards.greenhouse.io/riverfinancial"
+  },
+  {
+    name: "BitGo",
+    address: "https://boards.greenhouse.io/bitgo",
+    base:"https://boards.greenhouse.io/bitgo"
   }
 ];
 
@@ -112,7 +124,7 @@ async function scrapeJobData(website) {
     if (website.name === "Bitcoinerjobs") {
       websiteJobs = await scrapeBitcoinerjobs(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
-      console.log("Bitcoinerjobs jobs:", websiteJobs);
+      // console.log("Bitcoinerjobs jobs:", websiteJobs);
       // console.log("Bitcoinerjobs jobs:", websiteJobs);
 
     } else if (website.name === "Cryptocurrencyjobs") {
@@ -138,7 +150,15 @@ async function scrapeJobData(website) {
     } else if (website.name === "Tramell") {
       websiteJobs = await scrapeTramell(page, website.base);
       console.log("Tramell jobs:", websiteJobs.length);
-      console.log("Tramell jobs:", websiteJobs);
+      // console.log("Tramell jobs:", websiteJobs);
+    } else if (website.name === "River") {
+      websiteJobs = await scrapeRiver(page, website.base);
+      console.log("River jobs:", websiteJobs.length);
+      // console.log("River jobs:", websiteJobs);
+    } else if (website.name === "BitGo") {
+      websiteJobs = await scrapeBitGo(page, website.base);
+      console.log("BitGo jobs:", websiteJobs.length);
+       console.log("BitGo jobs:", websiteJobs);
     }
 
     jobData[website.name] = websiteJobs;
