@@ -16,8 +16,8 @@ async function scrapeBitfinex(page, baseUrl) {
 
       // Use page.evaluate to extract the title and li text content
       const jobInfo = await page.evaluate(() => {
-        const title = document.querySelector(".info h2").textContent;
-        const liText = document.querySelector(".info li").textContent;
+        const title = document.querySelector(".info h2").textContent.trim();;
+        const liText = document.querySelector(".info li").textContent.trim();;
         return { title, liText };
       });
       //push to array and return

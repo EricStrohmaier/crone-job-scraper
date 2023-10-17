@@ -11,6 +11,7 @@ const scrapeBitfinex = require("./scraper/bitfinex");
 const scrapeBitrefill = require("./scraper/bitrefill");
 const scrapeCryptocurrencyjobs = require("./scraper/cryptocurrency");
 const scrapeMigodi = require("./scraper/migodi");
+const scrapeTramell = require("./scraper/tramell");
 
 puppeteer.use(StealthPlugin());
 
@@ -68,6 +69,11 @@ const websites = [
     name: "Migodi",
     address: "https://www.migodi.com/jobs/",
     base: "https://www.migodi.com/jobs/",
+  },
+  {
+    name: "Tramell",
+    address: "https://tvp.fund/jobs/",
+    base: "https://tvp.fund",
   }
 ];
 
@@ -87,7 +93,7 @@ app.get("/", (req, res) => {
 async function scrapeJobData(website) {
   try {
     const browser = await puppeteer.launch({
-      headless: "new", // Run in headless mode
+      headless: "new",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -129,6 +135,10 @@ async function scrapeJobData(website) {
       websiteJobs = await scrapeMigodi(page, website.base);
       console.log("Migodi jobs:", websiteJobs.length);
       // console.log("Migodi jobs:", websiteJobs);
+    } else if (website.name === "Tramell") {
+      websiteJobs = await scrapeTramell(page, website.base);
+      console.log("Tramell jobs:", websiteJobs.length);
+      console.log("Tramell jobs:", websiteJobs);
     }
 
     jobData[website.name] = websiteJobs;
@@ -157,10 +167,7 @@ async function scrapeJobData(website) {
             tags: job.tags,
             salary: job.salary,
             category: job.category,
-            // postedAt: job.postedAt,
             applyURL: job.applyUrl,
-            // description: job.description,
-            // remote: job.remote,
           },
         ]);
         console.log("Jobs inserted:", data);
