@@ -21,7 +21,7 @@ async function scrapeRiver(page, baseUrl){
           url: baseUrl + jobUrl,
           location: jobLocation,
             type: "",
-            company: "BitGo",
+            company: "River",
             tags: [],
             salary: "",
             applyUrl:"",

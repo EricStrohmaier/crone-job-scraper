@@ -1,4 +1,3 @@
-const puppeteer = require('puppeteer');
 
 async function scrapeBTCSuisse(page) {
   const jobDetails = [];
