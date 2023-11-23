@@ -212,7 +212,7 @@ console.log(
   "Scraperjobs starting... Right now the cron job is set to run every 2 hours."
 );
 
-const fetchJobData = new CronJob("0 */2 * * *", async () => {
+const fetchJobData = new CronJob("0 */5 * * *", async () => {
   console.log("It is time for scraping...");
   await scraperjobs();
   console.log("The data scraping has completed.");
