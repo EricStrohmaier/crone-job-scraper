@@ -39,6 +39,10 @@ async function scrapeDreamStartupJob(page) {
       location: jobLocation,
       date: jobDate,
       description: jobDescription,
+      tags: [],
+      type: "",
+      category: "",
+      salary: "",
     });
   }
 

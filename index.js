@@ -234,7 +234,6 @@ async function  scrapeJobData(website) {
     } else if (website.name === "DreamStartupJob") {
       websiteJobs = await scrapeDreamStartupJob(page);
       console.log("DreamStartupJob jobs:", websiteJobs.length);
-      console.log(websiteJobs);
     }
 
     // TODO: just checking jobs from last month ?? DB might become to big to go through each time haha
