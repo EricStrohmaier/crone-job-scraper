@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-async function scrapeBitMex(page, baseUrl) {
+async function scrape21co(page, baseUrl) {
 
   const browser = await puppeteer.launch(
     {
@@ -51,7 +51,7 @@ async function scrapeBitMex(page, baseUrl) {
             url: baseUrl + jobUrl,
             location: jobLocation,
             type: "",
-            company: "BitMEX",
+            company: "21.co",
             tags: [],
             salary: "",
             applyUrl: "",
@@ -69,4 +69,4 @@ async function scrapeBitMex(page, baseUrl) {
   return jobDetails;
 }
 
-module.exports = scrapeBitMex;
+module.exports = scrape21co;

@@ -19,15 +19,15 @@ const scrapeRiver = require("./scraper/river");
 const scrapeBitGo = require("./scraper/bitgo");
 const scrapeXverse = require("./scraper/xverse");
 const scrapeThndr = require("./scraper/thndr");
-const scrapeCashApp = require("./scraper/cashapp");
 const scrapeBitMex = require("./scraper/BitMex");
 const scrapebraiins = require("./scraper/braiins");
 const scrapeRiotplatforms = require("./scraper/riotplatforms");
 const scrapeBitcoinjobs = require("./scraper/bitcoinjobs");
-const e = require("express");
 const scrapeBlock = require("./scraper/block");
-const scrapeStrike = require("./scraper/strike");
-
+const scrape21co = require("./scraper/21co");
+const scrapeCormint = require("./scraper/recruiting-paylocity");
+const scrapeHolepunch = require("./scraper/holepunch");
+const scrapeDreamStartupJob = require("./scraper/dreamstartup");
 puppeteer.use(StealthPlugin());
 
 const app = express();
@@ -98,23 +98,10 @@ const websites = [
     address: "https://boards.greenhouse.io/bitgo",
     base: "https://boards.greenhouse.io",
   },
-  // {
-  //   name: "Xverse",
-  //   address: "https://wellfound.com/company/xverse/jobs",
-  // },
   {
     name: "Thndr",
     address: "https://www.thndr.games/careers",
     base: "https://www.thndr.games",
-  },
-  {
-    name: "CashApp",
-    address: "https://cash.app/careers",
-  },
-  {
-    name: "BitMex",
-    address: "https://boards.greenhouse.io/bitmex",
-    base: "https://boards.greenhouse.io",
   },
   {
     name: "Braiins",
@@ -135,20 +122,35 @@ const websites = [
     address: "https://block.xyz/careers?search=bitcoin",
   },
   {
-    name: "Strike",
-    address:
-      "https://boards.greenhouse.io/embed/job_board?for=strike&b=https%3A%2F%2Fstrike.me%2Fcareers%2F",
+    name: "BitMex",
+    address: "https://boards.greenhouse.io/bitmex",
+    base: "https://boards.greenhouse.io",
+  },
+  {
+    name: "21.co",
+    address: "https://boards.greenhouse.io/21co",
+    base: "https://boards.greenhouse.io",
+  },
+  {
+    name: "Cormint",
+    address: "https://recruiting.paylocity.com/recruiting/jobs/All/4f22a546-5450-4906-98bf-d23603e05114/Cormint-Data-Systems-Inc",
+    base: "https://recruiting.paylocity.com",
+  },
+  {
+    name: "Holepunch",
+    address: "https://holepunch.recruitee.com",
+    base: "https://holepunch.recruitee.com",
+  },
+  {
+    name: "DreamStartupJob",
+    address: "https://dreamstartupjob.com/jobs/?q=bitcoin&l=&industry=Cryptocurrency",
   },
 ];
 
 const jobData = {};
 
 app.use(Sentry.Handlers.requestHandler());
-
-// TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler());
-
-// Define a route to access the scraped job data
 app.get("/", (req, res) => {
   res.json(jobData); // Return the jobData object as JSON response
 });
@@ -204,12 +206,7 @@ async function  scrapeJobData(website) {
     } else if (website.name === "Thndr") {
       websiteJobs = await scrapeThndr(page, website.base);
       console.log("Thndr jobs:", websiteJobs.length);
-    }
-    // if (website.name === "CashApp") {
-    //   websiteJobs = await scrapeCashApp(page);
-    //   console.log("CashApp jobs:", websiteJobs.length);
-    // } else
-    else if (website.name === "Braiins") {
+    } else if (website.name === "Braiins") {
       websiteJobs = await scrapebraiins(page);
       console.log("Braiins jobs:", websiteJobs.length);
     } else if (website.name === "Riotplatforms") {
@@ -221,22 +218,24 @@ async function  scrapeJobData(website) {
     } else if (website.name === "Block") {
       websiteJobs = await scrapeBlock(page);
       console.log("Block jobs:", websiteJobs.length);
+    } else if (website.name === "BitMex") {
+      websiteJobs = await scrapeBitMex(page, website.base);
+      console.log("BitMex jobs:", websiteJobs.length);
+    } else if (website.name === "21.co") {
+      websiteJobs = await scrape21co(page, website.base);
+      console.log("21.co jobs:", websiteJobs.length);
+    } else if (website.name === "Cormint") {
+      websiteJobs = await scrapeCormint(page, website.base);
+      console.log("Cormint jobs:", websiteJobs.length);
+    } else if (website.name === "Holepunch") {
+      websiteJobs = await scrapeHolepunch(page, website.base);
+      console.log("Holepunch jobs:", websiteJobs.length);
+      console.log(websiteJobs);
+    } else if (website.name === "DreamStartupJob") {
+      websiteJobs = await scrapeDreamStartupJob(page);
+      console.log("DreamStartupJob jobs:", websiteJobs.length);
+      console.log(websiteJobs);
     }
-    // if (website.name === "Strike") {
-    //   websiteJobs = await scrapeStrike(page);
-    //   console.log("Strike jobs:", websiteJobs.length );
-    // }
-    // else if (website.name === "BitMex") {
-    //   websiteJobs = await scrapeBitMex(page, website.base);
-    //   console.log("BitMex jobs:", websiteJobs.length);
-    //   console.log("BitMex jobs:", websiteJobs);
-    // }
-
-    // if (website.name === "Xverse") {
-    //   websiteJobs = await scrapeXverse(page, website.base);
-    //   console.log("Xverse jobs:", websiteJobs.length);
-    //   console.log("Xverse jobs:", websiteJobs);
-    // }
 
     // TODO: just checking jobs from last month ?? DB might become to big to go through each time haha
     else jobData[website.name] = websiteJobs;
@@ -248,10 +247,9 @@ async function  scrapeJobData(website) {
         .eq("title", job.title)
         .eq("url", job.url);
 
-      //console.log("existingData", existingData);
 
       if (existingData.length === 0) {
-        console.log("job inserting ", job.title);
+        console.log("Job Inserted ", job.title);
         // Insert the job only if it doesn't exist
         const { data, error } = await supabase.from(website.name).insert([
           {
@@ -264,9 +262,10 @@ async function  scrapeJobData(website) {
             salary: job.salary,
             category: job.category,
             applyURL: job.applyUrl,
+            description: job.description,
+            date: job.date,
           },
         ]);
-        // console.log("Jobs inserted:", job.title , job.url);
 
         if (error) {
           console.error("Error inserting job data:", error);
@@ -286,10 +285,6 @@ async function scraperjobs() {
   }
 }
 
-
-console.log(
-  "Scraperjobs starting... Right now the cron job is set to run every 2 hours."
-);
 
 const fetchJobData = new CronJob("0 */5 * * *", async () => {
 

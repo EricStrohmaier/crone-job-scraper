@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
-async function scrapeBitMex(page, baseUrl) {
-
+async function scrapeHolepunch( page, baseUrl) {
+//   const baseUrl = 'https://holepunch.recruitee.com'; // Replace with the actual base URL
   const browser = await puppeteer.launch(
     {
       headless: "new",
@@ -11,30 +11,30 @@ async function scrapeBitMex(page, baseUrl) {
       ],
     },
   );
+//   const page = await browser.newPage();
 
-  const sections = await page.$$("section.level-0");
+//   // Navigate to the jobs page
+//   await page.goto(baseUrl);
+
   const jobDetails = [];
 
-  for (const section of sections) {
-    const categoryName = await section.$eval("h3", (element) =>
+  // Select all job listing items
+  const jobListingItems = await page.$$('.sc-uzptka-1.ifQvfy');
+
+  for (const jobItem of jobListingItems) {
+    const jobTitle = await jobItem.$eval('.harIFI', (element) =>
       element.textContent.trim()
     );
 
-    const jobLinks = await section.$$('a[data-mapped="true"]');
-    const jobLocations = await section.$$("span.location");
+    const jobUrl = await jobItem.$eval('.harIFI', (element) =>
+      element.getAttribute('href')
+    );
 
-    for (let i = 0; i < jobLinks.length; i++) {
-      const jobTitle = await jobLinks[i].evaluate((element) =>
-        element.textContent.trim()
-      );
-      const jobUrl = await jobLinks[i].evaluate((element) =>
-        element.getAttribute("href")
-      );
-      const jobLocation = await jobLocations[i].evaluate((element) =>
-        element.textContent.trim()
-      );
+    const jobLocation = await jobItem.$eval('.custom-css-style-job-location', (element) =>
+      element.textContent.trim()
+    );
 
-      try {
+    try {
         const jobPage = await browser.newPage(); // Create a new page for each job link
         await jobPage.goto(baseUrl + jobUrl);
         const pageContent = await jobPage.evaluate(
@@ -45,13 +45,14 @@ async function scrapeBitMex(page, baseUrl) {
           pageContent.includes("bitcoin") ||
           pageContent.includes("Bitcoin")
         ) {
+            console.log("found bitcoin");
           jobDetails.push({
-            category: categoryName,
+            category: '',
             title: jobTitle,
             url: baseUrl + jobUrl,
             location: jobLocation,
             type: "",
-            company: "BitMEX",
+            company: "Holepunch",
             tags: [],
             salary: "",
             applyUrl: "",
@@ -64,9 +65,14 @@ async function scrapeBitMex(page, baseUrl) {
         console.error("Error scraping job data:", error);
       }
     }
-  }
+    // jobDetails.push({
+    //   title: jobTitle,
+    //   url: baseUrl + jobUrl,
+    //   location: jobLocation,
+    // });
 
-  return jobDetails;
+   return jobDetails;
 }
 
-module.exports = scrapeBitMex;
+module.exports = scrapeHolepunch;
+
