@@ -158,16 +158,19 @@ app.get("/", (req, res) => {
 process.setMaxListeners(15); // Increase the limit to an appropriate number
 
 async function  scrapeJobData(website) {
+  let options = {};
+  let browser;
+  if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+    options = {
+      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
+      defaultViewport: chrome.defaultViewport,
+      executablePath: await chrome.executablePath,
+      headless: true,
+      ignoreHTTPSErrors: true,
+    };
+  }
   try {
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-      ],
-    });
-
+    browser = await puppeteer.launch(options);
     const page = await browser.newPage();
 
     page.setDefaultNavigationTimeout(60000);
