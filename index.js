@@ -5,8 +5,6 @@ require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 const Sentry = require("@sentry/node");
 const { ProfilingIntegration } = require("@sentry/profiling-node");
-const puppeteer = require("puppeteer-extra");
-const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const CronJob = require("cron").CronJob;
 const scrapeBitcoinerjobs = require("./scraper/bitcoinerjobsScraper");
 const scrapeBTCSuisse = require("./scraper/btc-suisse");
@@ -17,7 +15,6 @@ const scrapeMigodi = require("./scraper/migodi");
 const scrapeTramell = require("./scraper/tramell");
 const scrapeRiver = require("./scraper/river");
 const scrapeBitGo = require("./scraper/bitgo");
-const scrapeXverse = require("./scraper/xverse");
 const scrapeThndr = require("./scraper/thndr");
 const scrapeBitMex = require("./scraper/BitMex");
 const scrapebraiins = require("./scraper/braiins");
@@ -157,6 +154,12 @@ app.get("/", (req, res) => {
 
 process.setMaxListeners(15); // Increase the limit to an appropriate number
 
+if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+  chrome = require("chrome-aws-lambda");
+  puppeteer = require("puppeteer-core");
+} else {
+  puppeteer = require("puppeteer");
+}
 async function  scrapeJobData(website) {
   let options = {};
   let browser;
