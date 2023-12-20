@@ -179,9 +179,10 @@ async function  scrapeJobData(website) {
     if (website.name === "Bitcoinerjobs") {
       websiteJobs = await scrapeBitcoinerjobs(page, website.address);
       console.log("Bitcoinerjobs jobs:", websiteJobs.length);
-    } else if (website.name === "Cryptocurrencyjobs") {
+    }
+    else if (website.name === "Cryptocurrencyjobs") {
       websiteJobs = await scrapeCryptocurrencyjobs(page, website.base);
-      console.log("CryptoJobsList jobs:", websiteJobs.length);
+      console.log("Cryptocurrencyjobs jobs:", websiteJobs.length);
     } else if (website.name === "BTC-Suisse") {
       websiteJobs = await scrapeBTCSuisse(page);
       console.log("BTC-Suisse jobs:", websiteJobs.length);
@@ -241,7 +242,7 @@ async function  scrapeJobData(website) {
 
     for (const job of websiteJobs) {
       const { data: existingData } = await supabase
-        .from(website.name)
+        .from('job_table')
         .select("title, url")
         .eq("title", job.title)
         .eq("url", job.url);
@@ -250,7 +251,7 @@ async function  scrapeJobData(website) {
       if (existingData.length === 0) {
         console.log("Job Inserted ", job.title);
         // Insert the job only if it doesn't exist
-        const { data, error } = await supabase.from(website.name).insert([
+        const { data, error } = await supabase.from('job_table').insert([
           {
             title: job.title,
             url: job.url,
@@ -261,8 +262,8 @@ async function  scrapeJobData(website) {
             salary: job.salary,
             category: job.category,
             applyURL: job.applyUrl,
-            description: job.description,
-            date: job.date,
+            description: job?.description?.replace(/(\r\n|\n|\r)/gm, ""),
+            date: job?.date,
           },
         ]);
 
@@ -304,4 +305,11 @@ app.use(function onError(err, req, res, next) {
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
+});
+//on error restart the script after 5 seconds
+process.on("unhandledRejection", (reason, p) => {
+  console.error(reason, "Unhandled Rejection at Promise", p);
+  setTimeout(() => {
+    scraperjobs();
+  }, 5000);
 });
