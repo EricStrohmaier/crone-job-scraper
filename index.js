@@ -153,6 +153,9 @@ app.get("/", (req, res) => {
 
 process.setMaxListeners(15); // Increase the limit to an appropriate number
 
+let chrome = {};
+let puppeteer;
+
 if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
   chrome = require("chrome-aws-lambda");
   puppeteer = require("puppeteer-core");
