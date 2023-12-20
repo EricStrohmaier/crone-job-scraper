@@ -25,7 +25,6 @@ const scrape21co = require("./scraper/21co");
 const scrapeCormint = require("./scraper/recruiting-paylocity");
 const scrapeHolepunch = require("./scraper/holepunch");
 const scrapeDreamStartupJob = require("./scraper/dreamstartup");
-puppeteer.use(StealthPlugin());
 
 const app = express();
 const port = 3001;
