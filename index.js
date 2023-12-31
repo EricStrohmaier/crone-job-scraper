@@ -162,9 +162,10 @@ if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
 } else {
   puppeteer = require("puppeteer");
 }
+let browser;
+
 async function  scrapeJobData(website) {
   let options = {};
-  let browser;
   if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
     options = {
       args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
@@ -175,9 +176,9 @@ async function  scrapeJobData(website) {
     };
   }
   try {
-    browser = await puppeteer.launch(options);
+    // browser = await puppeteer.launch(options);
     const page = await browser.newPage();
-
+    // console.log("Scraping: " + website.name);
     page.setDefaultNavigationTimeout(60000);
 
     await page.goto(website.address);
@@ -280,17 +281,20 @@ async function  scrapeJobData(website) {
         }
       }
     }
-
-    await browser.close();
+     await page.close();
   } catch (error) {
     console.error("Error scraping website", website.name, error);
   }
 }
 
 async function scraperjobs() {
+  browser = await puppeteer.launch({ headless: true });
+
   for (const website of websites) {
     await scrapeJobData(website);
   }
+  await browser.close();
+
 }
 
 
