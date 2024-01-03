@@ -147,9 +147,7 @@ const jobData = {};
 
 app.use(Sentry.Handlers.requestHandler());
 app.use(Sentry.Handlers.tracingHandler());
-app.get("/", (req, res) => {
-  res.json(jobData); // Return the jobData object as JSON response
-});
+
 
 process.setMaxListeners(15); // Increase the limit to an appropriate number
 
@@ -317,6 +315,9 @@ app.use(function onError(err, req, res, next) {
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
+});
+app.get("/", (req, res) => {
+  res.json(jobData); // Return the jobData object as JSON response
 });
 //on error restart the script after 5 seconds
 process.on("unhandledRejection", (reason, p) => {
