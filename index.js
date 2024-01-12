@@ -174,7 +174,9 @@ async function  scrapeJobData(website) {
     };
   }
   try {
-    // browser = await puppeteer.launch(options);
+    browser = await puppeteer.launch({
+      headless: 'new'
+    });
     const page = await browser.newPage();
     // console.log("Scraping: " + website.name);
     page.setDefaultNavigationTimeout(60000);
@@ -221,7 +223,7 @@ async function  scrapeJobData(website) {
       websiteJobs = await scrapeRiotplatforms(page, website.base);
       console.log("Riotplatforms jobs:", websiteJobs.length);
     } else if (website.name === "Bitcoinjobs") {
-      websiteJobs = await scrapeBitcoinjobs(page, website.base);
+      websiteJobs = await scrapeBitcoinjobs(page);
       console.log("Bitcoinjobs jobs:", websiteJobs.length);
     } else if (website.name === "Block") {
       websiteJobs = await scrapeBlock(page);

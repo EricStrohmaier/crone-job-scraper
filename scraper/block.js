@@ -1,7 +1,9 @@
 
 async function scrapeBlock(page) {
-  await page.waitForSelector('div.JobList_row__ZvTrC'); // Wait for job listings to load
-
+  try {
+  await page.waitForSelector('div.JobList_row__ZvTrC');
+  //else there is no job return
+ 
   const jobDetails = await page.evaluate(() => {
     const jobElements = Array.from(document.querySelectorAll('div.JobList_row__ZvTrC'));
 
@@ -30,6 +32,12 @@ async function scrapeBlock(page) {
   });
 
     return jobDetails;
+  } catch (error) {
+    // If the selector is not found or times out, return an empty array or a message
+    console.log('No jobs found or page failed to load properly:', error);
+    return []; // or return an appropriate message
+  }
+
 }
 
 module.exports = scrapeBlock;
