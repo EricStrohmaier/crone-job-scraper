@@ -1,41 +1,51 @@
 const { default: puppeteer } = require("puppeteer");
 
 async function scrapeBitcoinjobs(page) {
+  // Wait for the selector to ensure the elements are loaded
+  await page.waitForSelector('.w-dyn-item');
+
   const jobItems = await page.evaluate(() => {
     const items = [];
-    const URL = document.querySelector('.link-block').getAttribute('href');
-    const jobCards = document.querySelectorAll('.job-card');
+    const jobElements = document.querySelectorAll('.w-dyn-item'); // Select the wrapper elements
 
-    jobCards.forEach((card) => {
+    jobElements.forEach((element) => {
       const jobItem = {};
-      const jobName = card.querySelector('.job-name');
-      const jobCompany = card.querySelector('.job-company');
-      const locationText = card.querySelector('.categories-text');
-      const baseUrl = 'https://bitcoinjobs.com'
-      jobItem.title = jobName.textContent.trim();
-      jobItem.company = jobCompany.textContent.trim();
-      jobItem.location = locationText.textContent.trim();
-      jobItem.url = baseUrl + URL;  // Concatenate baseUrl with jobLink
+
+      const linkBlock = element.querySelector('.link-block');
+      if (!linkBlock) {
+        console.error('Link block not found');
+        return;
+      }
+      
+      // Extracting the href from the anchor tag wrapping the job card
+      const jobLink = linkBlock.getAttribute('href');
+      const baseUrl = 'https://bitcoinjobs.com';
+      jobItem.url = baseUrl + jobLink;
+
+      const jobCard = element.querySelector('.job-card');
+      if (!jobCard) {
+        console.error('Job card not found');
+        return;
+      }
+
+      const jobName = jobCard.querySelector('.job-name');
+      const jobCompany = jobCard.querySelector('.job-company');
+      const locationText = jobCard.querySelector('.categories-text');
+
+      jobItem.title = jobName ? jobName.textContent.trim() : '';
+      jobItem.company = jobCompany ? jobCompany.textContent.trim() : '';
+      jobItem.location = locationText ? locationText.textContent.trim() : '';
 
       const tags = [];
-      const tagElements = card.querySelectorAll('.categories-text');
+      const tagElements = jobCard.querySelectorAll('.categories-text');
       tagElements.forEach((tagElement) => {
-        tags.push(tagElement.textContent.trim());
+        if (tagElement) {
+          tags.push(tagElement.textContent.trim());
+        }
       });
 
-      // Add the second tag to the 'type' field
-      if (tags.length >= 2) {
-        jobItem.type = tags[1];
-      } else {
-        jobItem.type = "";
-      }
-
-      // Add the last tag to the 'tags' field
-      if (tags.length >= 1) {
-        jobItem.tags = [tags[tags.length - 1]];
-      } else {
-        jobItem.tags = [];
-      }
+      jobItem.type = tags.length >= 2 ? tags[1] : '';
+      jobItem.tags = tags.length >= 1 ? [tags[tags.length - 1]] : [];
 
       items.push(jobItem);
     });
