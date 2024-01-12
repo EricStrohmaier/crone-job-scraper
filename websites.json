@@ -1,0 +1,109 @@
+[
+    {
+        "name": "Bitcoinerjobs",
+        "address": "https://bitcoinerjobs.com",
+        "base": ""
+    },
+    {
+        "name": "Cryptocurrencyjobs",
+        "address": "https://cryptocurrencyjobs.co/?query=bitcoin",
+        "base": "https://cryptocurrencyjobs.co"
+    },
+    {
+        "name": "BTC-Suisse",
+        "address": "https://bitcoin-suisse.onlyfy.jobs/",
+        "base": ""
+    },
+    {
+        "name": "Bitfinex",
+        "address": "https://bitfinex.recruitee.com/",
+        "base": "https://bitfinex.recruitee.com"
+    },
+    {
+        "name": "Bitrefill",
+        "address": "https://careers.bitrefill.com/jobs",
+        "base": ""
+    },
+    {
+        "name": "Migodi",
+        "address": "https://www.migodi.com/jobs/",
+        "base": "https://www.migodi.com/jobs/"
+    },
+    {
+        "name": "Tramell",
+        "address": "https://tvp.fund/jobs/",
+        "base": "https://tvp.fund"
+    },
+    {
+        "name": "River",
+        "address": "https://boards.greenhouse.io/riverfinancial",
+        "base": "https://boards.greenhouse.io"
+    },
+    {
+        "name": "BitGo",
+        "address": "https://boards.greenhouse.io/bitgo",
+        "base": "https://boards.greenhouse.io"
+    },
+    {
+        "name": "Thndr",
+        "address": "https://www.thndr.games/careers",
+        "base": "https://www.thndr.games"
+    },
+    {
+        "name": "Braiins",
+        "address": "https://braiins.com/careers"
+    },
+    {
+        "name": "Riotplatforms",
+        "address": "https://www.riotplatforms.com/careers",
+        "base": "https://www.riotplatforms.com"
+    },
+    {
+        "name": "Bitcoinjobs",
+        "address": "https://bitcoinjobs.com/",
+        "base": "https://bitcoinjobs.com"
+    },
+    {
+        "name": "Block",
+        "address": "https://block.xyz/careers?search=bitcoin"
+    },
+    {
+        "name": "BitMex",
+        "address": "https://boards.greenhouse.io/bitmex",
+        "base": "https://boards.greenhouse.io"
+    },
+    {
+        "name": "21.co",
+        "address": "https://boards.greenhouse.io/21co",
+        "base": "https://boards.greenhouse.io"
+    },
+    {
+        "name": "Cormint",
+        "address": "https://recruiting.paylocity.com/recruiting/jobs/All/4f22a546-5450-4906-98bf-d23603e05114/Cormint-Data-Systems-Inc",
+        "base": "https://recruiting.paylocity.com"
+    },
+    {
+        "name": "Holepunch",
+        "address": "https://holepunch.recruitee.com",
+        "base": "https://holepunch.recruitee.com"
+    },
+    {
+        "name": "DreamStartupJob",
+        "address": "https://dreamstartupjob.com/jobs/?q=bitcoin&l=&industry=Cryptocurrency"
+    },
+    {
+        "name": "f2pool",
+        "address": "https://www.f2pool.com/joinus",
+        "base": "https://www.f2pool.com"
+    },
+    {
+        "name": "Exodus",
+        "address": "https://boards.greenhouse.io/exodus54/",
+        "base": "https://boards.greenhouse.io"
+    },
+    {
+        "name": "Custodia Bank",
+        "address": "https://jobs.lever.co/custodiabank",
+        "base": ""
+    }
+]

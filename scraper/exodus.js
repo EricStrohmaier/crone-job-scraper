@@ -1,57 +1,48 @@
-const puppeteer = require('puppeteer');
+// const { default: puppeteer } = require("puppeteer");
 
-async function scrapeJobDetails(page) {
-  const jobDetails = await page.evaluate(() => {
-    const debug = true; // Set this to true to enable console logs in the browser context
+async function scrapeExodus(page, baseUrl) {
 
-    if (debug) {
-      const pageContent = document.body.textContent;
-      console.log('pageContent', pageContent);
-    }
-    const openJobs = document.querySelectorAll('.x-open-positions');
-    console.log(openJobs);
-    const positions = [];
+  const sections = await page.$$('section.level-0');
 
-    // Selecting all department headers
-    const departmentHeaders = document.querySelectorAll('.x-open-positions__department-header');
+  const jobDetails = [];
 
-    departmentHeaders.forEach(header => {
-      const departmentName = header.textContent.trim();
+  for (const section of sections) {
+    const categoryName = await section.$eval('h3', (element) => element.textContent.trim());
 
-      // Selecting all cards under the current department header
-      const cards = header.nextElementSibling.querySelectorAll('.x-open-positions__card');
+    const jobLinks = await section.$$('a[data-mapped="true"]');
+    const jobLocations = await section.$$('span.location');
 
-      cards.forEach(card => {
-        const title = card.querySelector('.x-open-positions__card-body1 h4').textContent.trim();
-        const location = card.querySelector('.x-open-positions__card-labeltxt').textContent.trim();
-        const salaryRange = card.querySelector('.pay-range').textContent.trim();
-        const description = card.querySelector('.x-open-positions__card-body1-txt').textContent.trim();
+    for (let i = 0; i < jobLinks.length; i++) {
+      const jobTitle = await jobLinks[i].evaluate((element) => element.textContent.trim());
+      const jobUrl = await jobLinks[i].evaluate((element) => element.getAttribute('href'));
+      const jobLocation = await jobLocations[i].evaluate((element) => element.textContent.trim());
 
-        positions.push({
-          department: departmentName,
-          title,
-          location,
-          salaryRange,
-          description,
-        });
+      jobDetails.push({
+        category: categoryName,
+        title: jobTitle,
+        url: baseUrl + jobUrl,
+        location: jobLocation,
+        company: "Exodus",
       });
-    });
-
-    return positions;
-  });
+    }
+  }
 
   return jobDetails;
+
 }
 
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+module.exports = scrapeExodus;
 
-  await page.goto('https://www.exodus.com/careers/');
+// async function main() {
+//   const browser = await puppeteer.launch();
+//   const page = await browser.newPage();
 
-  const scrapedData = await scrapeJobDetails(page);
+//   await page.goto('https://boards.greenhouse.io/exodus54/');
+//   const baseUrl = 'https://boards.greenhouse.io';
+//   const jobDetails = await scrapeExodus(page, baseUrl);
+//   console.log(jobDetails);
 
-  console.log(scrapedData);
+//   await browser.close();
+// }
 
-  await browser.close();
-})();
+// main().catch(console.error);
