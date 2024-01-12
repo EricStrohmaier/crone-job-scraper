@@ -62,15 +62,14 @@ app.use(Sentry.Handlers.tracingHandler());
 
 require('events').EventEmitter.defaultMaxListeners = 20;
 
-let chrome = {};
-
 let browser;
 
-async function  scrapeJobData(website) {
+async function initBrowser() {
+  browser = await puppeteer.launch({ headless: "new" });
+}
+
+async function  scrapeJobData(website, browser) {
   try {
-    browser = await puppeteer.launch({
-      headless: 'new'
-    });
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(60000);
 
@@ -195,10 +194,9 @@ async function  scrapeJobData(website) {
 }
 
 async function scraperjobs() {
-  browser = await puppeteer.launch({ headless: true });
-
+  await initBrowser()
   for (const website of websites) {
-    await scrapeJobData(website);
+    await scrapeJobData(website,browser);
   }
   await browser.close();
 
@@ -206,7 +204,6 @@ async function scraperjobs() {
 
 
 const fetchJobData = new CronJob("0 */5 * * *", async () => {
-
   console.log("It is time for scraping...");
   await scraperjobs();
   console.log("The data scraping has completed.");
@@ -228,10 +225,21 @@ app.listen(port, () => {
 app.get("/", (req, res) => {
   res.json(jobData); // Return the jobData object as JSON response
 });
-//on error restart the script after 5 seconds
+// Handle unhandledRejection more safely
 process.on("unhandledRejection", (reason, p) => {
   console.error(reason, "Unhandled Rejection at Promise", p);
-  setTimeout(() => {
-    scraperjobs();
-  }, 5000);
+
+  // Add logic to differentiate between transient and permanent errors
+  // Example: Restart scraperjobs only if the error is transient
+  if (isTransientError(reason)) {
+    setTimeout(() => {
+      scraperjobs();
+    }, 5000);
+  }
 });
+
+// Function to check if an error is transient (just an example, implement based on your needs)
+function isTransientError(reason) {
+  // Implement logic to determine if the error is transient
+  return true; // Placeholder
+}
