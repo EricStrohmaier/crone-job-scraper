@@ -31,10 +31,13 @@ const websites = require('./websites.json');
 const f2poolscraper = require("./scraper/f2pool");
 const scrapeExodus = require("./scraper/exodus");
 const scrapeCustodiaBank = require("./scraper/custodiabank");
+const scrape21Energy = require("./scraper/21energy");
+const scrapeCoinTelegraph = require("./scraper/cointelegraph");
+const scrapeCoinkite = require("./scraper/coinkite");
 
 
 const app = express();
-const port = 3001;
+const port = 4001;
 
 Sentry.init({
   dsn: "https://317ccb29737a10183da222cb987f5249@o4506060544802816.ingest.sentry.io/4506060547883008",
@@ -68,7 +71,7 @@ async function initBrowser() {
   browser = await puppeteer.launch({ headless: "new" });
 }
 
-async function  scrapeJobData(website, browser) {
+async function scrapeJobData(website, browser) {
   try {
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(60000);
@@ -144,16 +147,25 @@ async function  scrapeJobData(website, browser) {
       case "Custodia Bank":
         websiteJobs = await scrapeCustodiaBank(page);
         break;
+      case "21energy":
+        websiteJobs = await scrape21Energy(page);
+        break;
+      case "Cointelegraph":
+        websiteJobs = await scrapeCoinTelegraph(page, website.base);
+        break;
+      case "Coinkite":
+        websiteJobs = await scrapeCoinkite(page);
+        break;
       default:
         console.log(`No scraper defined for ${website.name}`);
         break;
     }
-    
+
     console.log(`${website.name} jobs:`, websiteJobs.length);
-    
+
 
     // TODO: just checking jobs from last 30days ?? DB might become to big to go through each time haha
-     jobData[website.name] = websiteJobs;
+    jobData[website.name] = websiteJobs;
 
     for (const job of websiteJobs) {
       const { data: existingData } = await supabase
@@ -179,6 +191,9 @@ async function  scrapeJobData(website, browser) {
             applyURL: job.applyUrl,
             description: job?.description?.replace(/(\r\n|\n|\r)/gm, ""),
             date: job?.date,
+            experience: job?.experience,
+            goals: job?.goals,
+            youWill: job?.youWill,
           },
         ]);
 
@@ -187,7 +202,7 @@ async function  scrapeJobData(website, browser) {
         }
       }
     }
-     await page.close();
+    await page.close();
   } catch (error) {
     console.error("Error scraping website", website.name, error);
   }
@@ -196,12 +211,11 @@ async function  scrapeJobData(website, browser) {
 async function scraperjobs() {
   await initBrowser()
   for (const website of websites) {
-    await scrapeJobData(website,browser);
+    await scrapeJobData(website, browser);
   }
   await browser.close();
 
 }
-
 
 const fetchJobData = new CronJob("0 */5 * * *", async () => {
   console.log("It is time for scraping...");

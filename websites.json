@@ -105,5 +105,20 @@
         "name": "Custodia Bank",
         "address": "https://jobs.lever.co/custodiabank",
         "base": ""
+    },
+    {
+        "name": "21energy",
+        "address": "https://21energy.com/pages/careers#jobs",
+        "base": ""
+    },
+    {
+        "name": "Cointelegraph",
+        "address": "https://jobs.cointelegraph.com/jobs?q=bitcoin",
+        "base": "https://jobs.cointelegraph.com"
+    },
+    {
+        "name": "Coinkite",
+        "address": "https://coinkite.com/careers",
+        "base": ""
     }
 ]
