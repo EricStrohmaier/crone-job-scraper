@@ -55,13 +55,13 @@ const puppeteer = require('puppeteer');
 }
 module.exports = scrapeCoinkite;
 
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto('https://coinkite.com/careers', { waitUntil: 'networkidle0' });
+// (async () => {
+//   const browser = await puppeteer.launch();
+//   const page = await browser.newPage();
+//   await page.goto('https://coinkite.com/careers', { waitUntil: 'networkidle0' });
 
-  const jobOpenings = await scrapeCoinkite(page);
-  console.log(jobOpenings);
+//   const jobOpenings = await scrapeCoinkite(page);
+//   console.log(jobOpenings);
 
-  await browser.close();
-})();
+//   await browser.close();
+// })();
