@@ -135,9 +135,9 @@ async function scrapeJobData(website, browser) {
       case "Holepunch":
         websiteJobs = await scrapeHolepunch(page, website.base);
         break;
-      case "DreamStartupJob":
-        websiteJobs = await scrapeDreamStartupJob(page);
-        break;
+      // case "DreamStartupJob":
+      //   websiteJobs = await scrapeDreamStartupJob(page);
+      //   break;
       case "f2pool":
         websiteJobs = await f2poolscraper(page, website.base);
         break;
