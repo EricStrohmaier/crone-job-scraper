@@ -24,9 +24,18 @@ async function scrapeBitcoinerjobs(page, baseUrl) {
     await page.waitForSelector(".job-box");
 
     const jobDetails = await page.evaluate(async (baseUrl) => {
-      const title = document.querySelector(".title").textContent.trim();
-      const company = document.querySelector(".company a").textContent.trim();
+      let title = "";
+      let company = "";
 
+      const titleElement = document.querySelector(".title");
+      if (titleElement) {
+        title = titleElement.textContent.trim();
+      }
+
+      const companyElement = document.querySelector(".company a");
+      if (companyElement) {
+        company = companyElement.textContent.trim();
+      }
       const url = new URL(window.location.href).href;
 
       const applyButton = document.querySelector(".buttons a");
