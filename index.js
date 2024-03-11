@@ -1,13 +1,9 @@
 const express = require("express");
-
-require("dotenv").config();
-
+const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const Sentry = require("@sentry/node");
 const { ProfilingIntegration } = require("@sentry/profiling-node");
 const CronJob = require("cron").CronJob;
-const puppeteer = require("puppeteer");
-
 const scrapeBitcoinerjobs = require("./scraper/bitcoinerjobsScraper");
 const scrapeBTCSuisse = require("./scraper/btc-suisse");
 const scrapeBitfinex = require("./scraper/bitfinex");
@@ -37,7 +33,38 @@ const scrapeCoinkite = require("./scraper/coinkite");
 
 
 const app = express();
+require("dotenv").config();
+app.use(cors());
 const port = 4001;
+
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
+let chrome = {};
+let puppeteer;
+
+if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+  chrome = require("chrome-aws-lambda");
+  puppeteer = require('puppeteer-extra')
+  console.log("hello aws?!");
+
+} else {
+  puppeteer = require('puppeteer-extra')
+  console.log("no aws");
+}
+
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+puppeteer.use(StealthPlugin())
+
 
 Sentry.init({
   dsn: "https://317ccb29737a10183da222cb987f5249@o4506060544802816.ingest.sentry.io/4506060547883008",
@@ -68,8 +95,19 @@ require('events').EventEmitter.defaultMaxListeners = 20;
 let browser;
 
 async function initBrowser() {
-  browser = await puppeteer.launch({ headless: "new" });
+  let options = {headless: 'new'};
+  if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+    options = {
+      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
+      defaultViewport: chrome.defaultViewport,
+      executablePath: await chrome.executablePath,
+      headless: true,
+      ignoreHTTPSErrors: true,
+    };
+  }
+    browser = await puppeteer.launch(options);
 }
+
 
 async function scrapeJobData(website, browser) {
   try {
@@ -214,7 +252,6 @@ async function scraperjobs() {
     await scrapeJobData(website, browser);
   }
   await browser.close();
-
 }
 
 const fetchJobData = new CronJob("0 */5 * * *", async () => {
@@ -226,6 +263,8 @@ fetchJobData.start();
 
 scraperjobs();
 
+
+
 app.use(Sentry.Handlers.errorHandler());
 
 app.use(function onError(err, req, res, next) {
@@ -235,25 +274,19 @@ app.use(function onError(err, req, res, next) {
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
+  setInterval(callUrl, 14 * 60 * 1000);
+
 });
 app.get("/", (req, res) => {
-  res.json(jobData); // Return the jobData object as JSON response
-});
-// Handle unhandledRejection more safely
-process.on("unhandledRejection", (reason, p) => {
-  console.error(reason, "Unhandled Rejection at Promise", p);
 
-  // Add logic to differentiate between transient and permanent errors
-  // Example: Restart scraperjobs only if the error is transient
-  if (isTransientError(reason)) {
-    setTimeout(() => {
-      scraperjobs();
-    }, 5000);
+  res.json('Hello world',jobData); // Return the jobData object as JSON response
+});
+
+ async function callUrl() {
+  try {
+    const response = await axios.get('https://crone-job-scraper-1.onrender.com');
+    console.log('URL called successfully:', response.data);
+  } catch (error) {
+    console.error('Error calling URL:', error);
   }
-});
-
-// Function to check if an error is transient (just an example, implement based on your needs)
-function isTransientError(reason) {
-  // Implement logic to determine if the error is transient
-  return true; // Placeholder
 }
